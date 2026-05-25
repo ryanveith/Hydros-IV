@@ -1,4 +1,5 @@
 from tkinter import *
+from PIL import Image, ImageTk
 import json
 
 class GUI():
@@ -11,14 +12,20 @@ class GUI():
             self.world_host = world_logic
 
         #camera control
+        self.tile_width = 100
+        self.tile_height = 50
         self.zoom = 100
         self.screen_x = 0
         self.screen_y = 0
+        #pan camera
         self.panning = False
         self.pan_up = False
         self.pan_down = False
         self.pan_right = False
         self.pan_left = False
+        #zoom camera
+        self.zoom_in = False
+        self.zoom_out = False
 
         #Python will garbage collect images that tkinter needs to display on canvas
         #So save open images to prevent this 
@@ -137,6 +144,11 @@ class GUI():
                 self.pan_screen("Right", 1)
             if (self.pan_left):
                 self.pan_screen("Left", 1)
+        if (self.zoom_in):
+            self.zoom_screen("In", 5)
+        elif (self.zoom_out):
+            self.zoom_screen("Out", 5)
+
 
         #This should get called only once, an then will keep redrawing GUI
         #self.time = self.time + 1 
@@ -157,10 +169,26 @@ class GUI():
             if (len(square_to_update) > 0):
                 #update
                 #self.canvas.itemconfig(square_to_update[0], )
-                self.canvas.coords(square_to_update[0], square.x * 100 + self.screen_x, square.y * 50 + self.screen_y)
+                self.canvas.coords(
+                    square_to_update[0], 
+                    int(self.zoom / 100 * (square.x * self.tile_width + self.screen_x)), 
+                    int(self.zoom / 100 * (square.y * self.tile_height + self.screen_y)))
+                
+                if (mode == "zoom screen"):
+                    square_image = ImageTk.PhotoImage(Image.open(square.image_file).resize((int(self.zoom / 100 * self.tile_width), int(self.zoom / 100 * self.tile_height))))
+                    self.canvas.itemconfig(square_to_update, image=square_image)
+                    #prevent image from being garbage collected
+                    self.image_list[square.world+str(square.x)+"x"+str(square.y)] = square_image
             else:
-                square_image = PhotoImage(file=square.image_file)
-                self.canvas.create_image(square.x * 10 + self.screen_x, square.y * 50 + self.screen_y, image=square_image, tag=(square.world+str(square.x)+"x"+str(square.y)) )
+                #square_image = PhotoImage(file=square.image_file)
+                #tmp_image = Image.open(square.image_file)
+                #tmp_image = tmp_image.resize((self.tile_width, self.tile_height))
+                square_image = ImageTk.PhotoImage(Image.open(square.image_file).resize((int(self.zoom / 100 * self.tile_width), int(self.zoom / 100 * self.tile_height))))
+                self.canvas.create_image(
+                    int(self.zoom / 100 * (square.x * self.tile_width + self.screen_x)), 
+                    int(self.zoom / 100 * (square.y * self.tile_height + self.screen_y)), 
+                    image=square_image, 
+                    tag=(square.world+str(square.x)+"x"+str(square.y)) )
                 #prevent image from being garbage collected
                 self.image_list[square.world+str(square.x)+"x"+str(square.y)] = square_image
 
@@ -173,12 +201,22 @@ class GUI():
             self.screen_x += amount
         elif (direction == "Right"):
             self.screen_x -= amount
-        
-        
         else:
             return
         self.draw_world("pan screen")
 
+    def zoom_screen(self, direction, amount):
+        if (direction == "In"):
+            self.zoom += amount
+            if (self.zoom > 300):
+                self.zoom = 300
+        elif (direction == "Out"):
+            self.zoom -= amount
+            if (self.zoom < 50):
+                self.zoom = 50
+        else:
+            return
+        self.draw_world("zoom screen")
 
     #by default is doing mouse and keys so first step is probably distingishing event type?
     #could also just bind them to different events, only downside of this is it means re-mapping controls cant switch between mouse/key nicely
@@ -201,6 +239,10 @@ class GUI():
                 elif (event.keysym == "Right"):
                     self.pan_right = True
                     self.panning = True
+                elif (event.keysym == "plus"):
+                    self.zoom_in = True
+                elif (event.keysym == "minus"):
+                    self.zoom_out = True
                 
 
             
@@ -228,5 +270,9 @@ class GUI():
                 elif (event.keysym == "Right"):
                     self.pan_right = False
                     self.panning = False
+                elif (event.keysym == "plus"):
+                    self.zoom_in = False
+                elif (event.keysym == "minus"):
+                    self.zoom_out = False
 
         
