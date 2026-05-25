@@ -3,11 +3,27 @@ import json
 
 class GUI():
     def __init__(self, world_logic):
+        #variables for world
         self.world = []
         self.is_host = True
         self.world_host = None
         if self.is_host:
             self.world_host = world_logic
+
+        #camera control
+        self.zoom = 100
+        self.screen_x = 0
+        self.screen_y = 0
+        self.panning = False
+        self.pan_up = False
+        self.pan_down = False
+        self.pan_right = False
+        self.pan_left = False
+
+        #Python will garbage collect images that tkinter needs to display on canvas
+        #So save open images to prevent this 
+        #(it might make more sense to have a list of static texture images loaded an only use this for animations but good enough)
+        self.image_list = {}
 
         self.state = 0
 
@@ -60,8 +76,12 @@ class GUI():
         #User Interaction
 
         #key pressed
-        self.root.bind("<KeyRelease>", self.key_pressed)
-        self.root.bind("<Button-1>", self.key_pressed)
+        self.root.bind("<KeyPress>", self.key_pressed)
+        self.root.bind("<ButtonPress-1>", self.key_pressed)
+
+        self.root.bind("<KeyRelease>", self.key_released)
+        self.root.bind("<ButtonRelease-1>", self.key_released)
+        
         #<Button-1>: Left mouse button click.
         #<Button-2>: Middle mouse button (scroll wheel) click.
         #<Button-3>: Right mouse button click.
@@ -93,17 +113,98 @@ class GUI():
         if (self.state == 0):
             if (self.is_host == True):
                 self.world_host.join({"name": self.name, "root": self.root})
+                #Start updating canvas based on world
+                #self.state should be expanded so this can be simplified
+                self.state = 1
+                self.running_world = True
+                self.clock_Update_draw_world()
             else:
                 raise Exception("Multiplayer fuctionality is not supported, you must be host to join a world")
         else:
             raise Exception("You can only join a world from the main menu, not a game, quit the current game first")
     
     def world_changed(self, event):
-        print(event)
         self.world = self.world_host.get_world()
         print("World Updated:", self.world)
+    
+    def clock_Update_draw_world(self):
+        if (self.panning):
+            if (self.pan_up):
+                self.pan_screen("Up", 1)
+            if (self.pan_down):
+                self.pan_screen("Down", 1)
+            if (self.pan_right):
+                self.pan_screen("Right", 1)
+            if (self.pan_left):
+                self.pan_screen("Left", 1)
 
+        #This should get called only once, an then will keep redrawing GUI
+        #self.time = self.time + 1 
+        #print(self.time)
+        self.draw_world("clock update")
+
+        if (self.running_world == True):
+            #Call update_clock again after 1 second
+            self.root.after(10, self.clock_Update_draw_world)
+
+    def draw_world(self, mode):
+        for square in self.world:
+            #Figure out if it is already on the canvas
+            square_to_update = self.canvas.find_withtag(square.world+str(square.x)+"x"+str(square.y))
+            #If it is update it
+            #If it is not add it
+            #find with tag returns a tuple
+            if (len(square_to_update) > 0):
+                #update
+                #self.canvas.itemconfig(square_to_update[0], )
+                self.canvas.coords(square_to_update[0], square.x * 100 + self.screen_x, square.y * 50 + self.screen_y)
+            else:
+                square_image = PhotoImage(file=square.image_file)
+                self.canvas.create_image(square.x * 10 + self.screen_x, square.y * 50 + self.screen_y, image=square_image, tag=(square.world+str(square.x)+"x"+str(square.y)) )
+                #prevent image from being garbage collected
+                self.image_list[square.world+str(square.x)+"x"+str(square.y)] = square_image
+
+    def pan_screen(self, direction, amount):
+        if (direction == "Up"):
+            self.screen_y += amount
+        elif (direction == "Down"):
+            self.screen_y -= amount
+        elif (direction == "Left"):
+            self.screen_x += amount
+        elif (direction == "Right"):
+            self.screen_x -= amount
+        
+        
+        else:
+            return
+        self.draw_world("pan screen")
+
+
+    #by default is doing mouse and keys so first step is probably distingishing event type?
+    #could also just bind them to different events, only downside of this is it means re-mapping controls cant switch between mouse/key nicely
+    #In the end it is going to get passes to world logic if it is not a gui change so...    
     def key_pressed(self, event):
+        if (self.state == 0):
+            pass
+        else:
+            if (event.type == "2"):
+                #start panning screen
+                if (event.keysym == "Up"):
+                    self.pan_up = True
+                    self.panning = True
+                elif (event.keysym == "Down"):
+                    self.pan_down = True
+                    self.panning = True
+                elif (event.keysym == "Left"):
+                    self.pan_left = True
+                    self.panning = True
+                elif (event.keysym == "Right"):
+                    self.pan_right = True
+                    self.panning = True
+                
+
+            
+    def key_released(self, event):
         if (self.state == 0):
             #handle main menu
             print(event)
@@ -113,10 +214,19 @@ class GUI():
                     print("joining world")
                     self.join_world()
         else:
-            return
-        #by default is doing mouse and keys so first step is probably distingishing event type?
-        #could also just bind them to different events, only downside of this is it means re-mapping controls cant switch between mouse/key nicely
-        #In the end it is going to get passes to world logic if it is not a gui change so...
+            if (event.type == "3"):
+                #stop pan screen (arrow keys for now)
+                if (event.keysym == "Up"):
+                    self.pan_up = False
+                    self.panning = False
+                elif (event.keysym == "Down"):
+                    self.pan_down = False
+                    self.panning = False
+                elif (event.keysym == "Left"):
+                    self.pan_left = False
+                    self.panning = False
+                elif (event.keysym == "Right"):
+                    self.pan_right = False
+                    self.panning = False
 
-        #print(event.keysym)
-        #if (event.keysym == "Return"):
+        

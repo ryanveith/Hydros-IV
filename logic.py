@@ -1,8 +1,10 @@
+import square
+
 import json
 
 class Logic():
     def __init__(self):
-        self.state = [1, 2, 3]
+        self.state = [square.Square(0,0), square.Square(1,0), square.Square(2,0)]
         self.playerlist = []
 
         #Logic needs to have a clock and should probably jut use the self.root.after on the GUI of host
