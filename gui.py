@@ -2,6 +2,8 @@ from tkinter import *
 from PIL import Image, ImageTk
 import json
 
+import terrain.square as square
+
 class GUI():
     def __init__(self, world_logic):
         #variables for world
@@ -160,38 +162,31 @@ class GUI():
             self.root.after(10, self.clock_Update_draw_world)
 
     def draw_world(self, mode):
-        for square in self.world:
-            #Figure out if it is already on the canvas
-            square_to_update = self.canvas.find_withtag(square.world+str(square.x)+"x"+str(square.y))
-            #If it is update it
-            #If it is not add it
-            #find with tag returns a tuple
-            if (len(square_to_update) > 0):
-                #update
-                #self.canvas.itemconfig(square_to_update[0], )
-                self.canvas.coords(
-                    square_to_update[0], 
-                    int(self.zoom / 100 * (square.x * self.tile_width + self.screen_x)), 
-                    int(self.zoom / 100 * (square.y * self.tile_height + self.screen_y)))
-                
-                if (mode == "zoom screen"):
-                    square_image = ImageTk.PhotoImage(Image.open(square.image_file).resize((int(self.zoom / 100 * self.tile_width), int(self.zoom / 100 * self.tile_height))))
-                    self.canvas.itemconfig(square_to_update, image=square_image)
-                    #prevent image from being garbage collected
-                    self.image_list[square.world+str(square.x)+"x"+str(square.y)] = square_image
-            else:
-                #square_image = PhotoImage(file=square.image_file)
-                #tmp_image = Image.open(square.image_file)
-                #tmp_image = tmp_image.resize((self.tile_width, self.tile_height))
-                square_image = ImageTk.PhotoImage(Image.open(square.image_file).resize((int(self.zoom / 100 * self.tile_width), int(self.zoom / 100 * self.tile_height))))
-                self.canvas.create_image(
-                    int(self.zoom / 100 * (square.x * self.tile_width + self.screen_x)), 
-                    int(self.zoom / 100 * (square.y * self.tile_height + self.screen_y)), 
-                    image=square_image, 
-                    tag=(square.world+str(square.x)+"x"+str(square.y)) )
+        for drawable_object in self.world:
+            if (drawable_object.tkinter_id == None):
+                #This is a new object that needs to get added
+                object_image = ImageTk.PhotoImage(Image.open(drawable_object.image_file).resize((int(self.zoom / 100 * self.tile_width), int(self.zoom / 100 * self.tile_height))))
+                drawable_object.tkinter_id = self.canvas.create_image(
+                        int(self.zoom / 100 * ((drawable_object.x + (drawable_object.y % 2)/2) * self.tile_width + self.screen_x)), 
+                        int(self.zoom / 100 * (drawable_object.y * self.tile_height + self.screen_y)), 
+                        image=object_image, 
+                        anchor="center",
+                        tag=drawable_object.tag)
                 #prevent image from being garbage collected
-                self.image_list[square.world+str(square.x)+"x"+str(square.y)] = square_image
-
+                self.image_list[drawable_object.tkinter_id] = object_image
+            else:
+                #Update Objects
+                self.canvas.coords(
+                    drawable_object.tkinter_id, 
+                    int(self.zoom / 100 * ((drawable_object.x + (drawable_object.y % 2)/2) * self.tile_width + self.screen_x)), 
+                    int(self.zoom / 100 * (drawable_object.y * self.tile_height + self.screen_y)))
+                #zoom images
+                if (mode == "zoom screen"):
+                    square_image = ImageTk.PhotoImage(Image.open(drawable_object.image_file).resize((int(self.zoom / 100 * self.tile_width), int(self.zoom / 100 * self.tile_height))))
+                    self.canvas.itemconfig(drawable_object.tkinter_id, image=square_image)
+                    #prevent image from being garbage collected
+                    self.image_list[drawable_object.world+str(drawable_object.x)+"x"+str(drawable_object.y)] = square_image
+            
     def pan_screen(self, direction, amount):
         if (direction == "Up"):
             self.screen_y += amount
@@ -218,12 +213,23 @@ class GUI():
             return
         self.draw_world("zoom screen")
 
+    def get_grid_square(self, x, y):
+        #Convert to absolute cordinates
+        x = x/(self.zoom/100)
+        y = y/(self.zoom/100)
+        x -= self.screen_x
+        y -= self.screen_y
+        #Get aprox gridspace (prioritizes being fast over being correct)
+        y = round(y/self.tile_height)
+        x = round(x/self.tile_width - (y % 2)/2)
+        return (x, y)
+
     #by default is doing mouse and keys so first step is probably distingishing event type?
     #could also just bind them to different events, only downside of this is it means re-mapping controls cant switch between mouse/key nicely
     #In the end it is going to get passes to world logic if it is not a gui change so...    
     def key_pressed(self, event):
         if (self.state == 0):
-            pass
+            return
         else:
             if (event.type == "2"):
                 #start panning screen
@@ -243,6 +249,8 @@ class GUI():
                     self.zoom_in = True
                 elif (event.keysym == "minus"):
                     self.zoom_out = True
+                else:
+                    print(self.get_grid_square(event.x, event.y))
                 
 
             

@@ -1,10 +1,11 @@
-import square
+import terrain.square as square
+import units.unit as unit
 
 import json
 
 class Logic():
     def __init__(self):
-        self.state = [square.Square(0,0), square.Square(1,0), square.Square(2,0)]
+        self.state = [square.Square(0,0), square.Square(1,0), square.Square(2,0), square.Square(0,1), square.Square(1,1), square.Square(2,1) ]
         self.playerlist = []
 
         #Logic needs to have a clock and should probably jut use the self.root.after on the GUI of host
@@ -19,6 +20,12 @@ class Logic():
     def join(self, player):
         print(player["name"], " joined")
         self.playerlist.append(player)
+        
+        hero_unit = unit.Unit(0, 0, "Hero")
+        #spawn_location = next((spot for spot in self.state if spot.x == 0 and spot.y == 0), None) 
+        #spawn_location.occupied = unit
+        self.state.append(hero_unit)
+
         self.broadcast_world()
     
     def broadcast_world(self):
