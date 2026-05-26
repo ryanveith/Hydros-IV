@@ -3,6 +3,7 @@ from PIL import Image, ImageTk
 import json
 
 import terrain.square as square
+import constants
 
 class GUI():
     def __init__(self, world_logic):
@@ -14,8 +15,6 @@ class GUI():
             self.world_host = world_logic
 
         #camera control
-        self.tile_width = 100
-        self.tile_height = 50
         self.zoom = 100
         self.screen_x = 0
         self.screen_y = 0
@@ -165,12 +164,12 @@ class GUI():
         for drawable_object in self.world:
             if (drawable_object.tkinter_id == None):
                 #This is a new object that needs to get added
-                object_image = ImageTk.PhotoImage(Image.open(drawable_object.image_file).resize((int(self.zoom / 100 * self.tile_width), int(self.zoom / 100 * self.tile_height))))
+                object_image = ImageTk.PhotoImage(Image.open(drawable_object.image_file).resize((int(self.zoom / 100 * drawable_object.width), int(self.zoom / 100 * drawable_object.height))))
                 drawable_object.tkinter_id = self.canvas.create_image(
-                        int(self.zoom / 100 * ((drawable_object.x + (drawable_object.y % 2)/2) * self.tile_width + self.screen_x)), 
-                        int(self.zoom / 100 * (drawable_object.y * self.tile_height + self.screen_y)), 
+                        int(self.zoom / 100 * ((drawable_object.x + (drawable_object.y % 2)/2) * constants.TILE_WIDTH + self.screen_x)), 
+                        int(self.zoom / 100 * (drawable_object.y * constants.TILE_HEIGHT + self.screen_y)), 
                         image=object_image, 
-                        anchor="center",
+                        anchor="s", #"center",
                         tag=drawable_object.tag)
                 #prevent image from being garbage collected
                 self.image_list[drawable_object.tkinter_id] = object_image
@@ -178,15 +177,15 @@ class GUI():
                 #Update Objects
                 self.canvas.coords(
                     drawable_object.tkinter_id, 
-                    int(self.zoom / 100 * ((drawable_object.x + (drawable_object.y % 2)/2) * self.tile_width + self.screen_x)), 
-                    int(self.zoom / 100 * (drawable_object.y * self.tile_height + self.screen_y)))
+                    int(self.zoom / 100 * ((drawable_object.x + (drawable_object.y % 2)/2) * constants.TILE_WIDTH + self.screen_x)), 
+                    int(self.zoom / 100 * (drawable_object.y * constants.TILE_HEIGHT + self.screen_y)))
                 #zoom images
                 if (mode == "zoom screen"):
-                    square_image = ImageTk.PhotoImage(Image.open(drawable_object.image_file).resize((int(self.zoom / 100 * self.tile_width), int(self.zoom / 100 * self.tile_height))))
-                    self.canvas.itemconfig(drawable_object.tkinter_id, image=square_image)
+                    object_image = ImageTk.PhotoImage(Image.open(drawable_object.image_file).resize((int(self.zoom / 100 * drawable_object.width), int(self.zoom / 100 * drawable_object.height))))
+                    self.canvas.itemconfig(drawable_object.tkinter_id, image=object_image)
                     #prevent image from being garbage collected
-                    self.image_list[drawable_object.world+str(drawable_object.x)+"x"+str(drawable_object.y)] = square_image
-            
+                    self.image_list[drawable_object.tkinter_id] = object_image
+
     def pan_screen(self, direction, amount):
         if (direction == "Up"):
             self.screen_y += amount
@@ -220,8 +219,8 @@ class GUI():
         x -= self.screen_x
         y -= self.screen_y
         #Get aprox gridspace (prioritizes being fast over being correct)
-        y = round(y/self.tile_height)
-        x = round(x/self.tile_width - (y % 2)/2)
+        y = round(y/constants.TILE_HEIGHT + 0.5)
+        x = round(x/constants.TILE_WIDTH - (y % 2)/2)
         return (x, y)
 
     #by default is doing mouse and keys so first step is probably distingishing event type?
