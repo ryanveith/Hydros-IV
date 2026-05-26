@@ -8,7 +8,7 @@ import constants
 class GUI():
     def __init__(self, world_logic):
         #variables for world
-        self.world = []
+        self.world = {}
         self.is_host = True
         self.world_host = None
         if self.is_host:
@@ -161,7 +161,7 @@ class GUI():
             self.root.after(10, self.clock_Update_draw_world)
 
     def draw_world(self, mode):
-        for drawable_object in self.world:
+        for drawable_object in self.world.values():
             if (drawable_object.tkinter_id == None):
                 #This is a new object that needs to get added
                 object_image = ImageTk.PhotoImage(Image.open(drawable_object.image_file).resize((int(self.zoom / 100 * drawable_object.width), int(self.zoom / 100 * drawable_object.height))))
@@ -249,7 +249,8 @@ class GUI():
                 elif (event.keysym == "minus"):
                     self.zoom_out = True
                 else:
-                    print(self.get_grid_square(event.x, event.y))
+                    x, y = self.get_grid_square(event.x, event.y)
+                    self.world["Giles Corey Hero"].pathfind(self.world, x, y)
                 
 
             

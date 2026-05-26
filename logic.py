@@ -5,7 +5,9 @@ import json
 
 class Logic():
     def __init__(self):
-        self.state = [square.Square(0,0), square.Square(1,0), square.Square(2,0), square.Square(0,1), square.Square(1,1), square.Square(2,1) ]
+        self.state = {
+            "0x0":square.Square(0,0), "1x0":square.Square(1,0), "2x0":square.Square(2,0), 
+            "0x1":square.Square(0,1), "1x1":square.Square(1,1), "2x1":square.Square(2,1)}
         self.playerlist = []
 
         #Logic needs to have a clock and should probably jut use the self.root.after on the GUI of host
@@ -24,7 +26,7 @@ class Logic():
         hero_unit = unit.Unit(0, 0, "Hero")
         #spawn_location = next((spot for spot in self.state if spot.x == 0 and spot.y == 0), None) 
         #spawn_location.occupied = unit
-        self.state.append(hero_unit)
+        self.state[player["name"]+" Hero"] = hero_unit
 
         self.broadcast_world()
     
