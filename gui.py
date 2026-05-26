@@ -250,7 +250,8 @@ class GUI():
                     self.zoom_out = True
                 else:
                     x, y = self.get_grid_square(event.x, event.y)
-                    self.world["Giles Corey Hero"].pathfind(self.world, x, y)
+                    if (self.world.get(str(x)+"x"+str(y)) != None):
+                        self.world["Giles Corey Hero"].pathfind(self.world, x, y)
                 
 
             
