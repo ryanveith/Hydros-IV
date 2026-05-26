@@ -27,7 +27,7 @@ class Unit(drawable_object.Drawable_Object):
                 up_right = world.get(str(current_tile.x+1)+"x"+str(current_tile.y+1))
                 down_right = world.get(str(current_tile.x+1)+"x"+str(current_tile.y-1))
                 self.actions = [up_left, down_left, up_right, down_right]
-                self.actions = filter(lambda x: x != None), self.actions)
+                self.actions = filter((lambda x: x != None), self.actions)
 
         #create a starting node and add it to the frontier
         starting_node = Node(world.get(str(self.x)+"x"+str(self.y)), None, self.heuristic(current_tile, goal_tile))
