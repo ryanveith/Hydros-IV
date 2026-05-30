@@ -2,6 +2,7 @@ from tkinter import *
 from PIL import Image, ImageTk
 import json
 
+import drawable_object
 import terrain.square as square
 import constants
 
@@ -101,6 +102,9 @@ class GUI():
         #world events
         self.root.bind("<<WorldUpdated>>", self.world_changed)
 
+        #Setting root also starts world updates
+        #This is requred since using same root for logic as host's tkinter mainloop
+        world_logic.set_root(self.root)
 
         print("Created Graphical User Interface")
         # Execute Tkinter
@@ -133,7 +137,7 @@ class GUI():
     
     def world_changed(self, event):
         self.world = self.world_host.get_world()
-        print("World Updated:", self.world)
+        #print("World Updated:", self.world)
     
     def clock_Update_draw_world(self):
         if (self.panning):
@@ -161,30 +165,12 @@ class GUI():
             self.root.after(10, self.clock_Update_draw_world)
 
     def draw_world(self, mode):
-        for drawable_object in self.world.values():
-            if (drawable_object.tkinter_id == None):
-                #This is a new object that needs to get added
-                object_image = ImageTk.PhotoImage(Image.open(drawable_object.image_file).resize((int(self.zoom / 100 * drawable_object.width), int(self.zoom / 100 * drawable_object.height))))
-                drawable_object.tkinter_id = self.canvas.create_image(
-                        int(self.zoom / 100 * ((drawable_object.x + (drawable_object.y % 2)/2) * constants.TILE_WIDTH + self.screen_x)), 
-                        int(self.zoom / 100 * (drawable_object.y * constants.TILE_HEIGHT + self.screen_y)), 
-                        image=object_image, 
-                        anchor="s", #"center",
-                        tag=drawable_object.tag)
-                #prevent image from being garbage collected
-                self.image_list[drawable_object.tkinter_id] = object_image
-            else:
-                #Update Objects
-                self.canvas.coords(
-                    drawable_object.tkinter_id, 
-                    int(self.zoom / 100 * ((drawable_object.x + (drawable_object.y % 2)/2) * constants.TILE_WIDTH + self.screen_x)), 
-                    int(self.zoom / 100 * (drawable_object.y * constants.TILE_HEIGHT + self.screen_y)))
-                #zoom images
-                if (mode == "zoom screen"):
-                    object_image = ImageTk.PhotoImage(Image.open(drawable_object.image_file).resize((int(self.zoom / 100 * drawable_object.width), int(self.zoom / 100 * drawable_object.height))))
-                    self.canvas.itemconfig(drawable_object.tkinter_id, image=object_image)
-                    #prevent image from being garbage collected
-                    self.image_list[drawable_object.tkinter_id] = object_image
+        #Everything we are drawing should be a child of Drawable_Object
+        object_to_draw: drawable_object.Drawable_Object
+        for object_to_draw in self.world.values():
+            object_to_draw.draw_self(self.zoom, self.screen_x, self.screen_y, self.canvas, mode, self.image_list)
+            
+            
 
     def pan_screen(self, direction, amount):
         if (direction == "Up"):
@@ -283,5 +269,7 @@ class GUI():
                     self.zoom_in = False
                 elif (event.keysym == "minus"):
                     self.zoom_out = False
+                elif (event.keysym == "Return"):
+                    self.world_host.create_projectile(self.world["2x1"], self.world["Giles Corey Hero"])
 
         
