@@ -1,3 +1,4 @@
+import math
 from tkinter import *
 from PIL import Image, ImageTk
 
@@ -16,26 +17,59 @@ class Projectile(drawable_object.Drawable_Object):
         else:
             self.lifetime -= 1
 
-            
+
             #update position
             speed = 5
 
             target_x = ((self.target.x + (self.target.y % 2)/2) * constants.TILE_WIDTH) #- self.target.width/2
             target_y =  (self.target.y * constants.TILE_HEIGHT) - self.target.height/2
-            #move in x
-            if (target_x > self.x + speed):
-                self.x += speed
-            elif (target_x < self.x - speed):
-                self.x -= speed
+            
+
+            #if already there dont move
+            if (self.x == target_x and self.y == target_y):
+                print("no collision has been implemented yet")
+                return
+            #save data for preventing overshooting target
+            if (self.x < target_x):
+                smaller_x = True
             else:
+                smaller_x = False
+            #Should not need to check x since we are facing desination perfectly so if we overshoot
+            #if (self.y < target_y):
+            #    smaller_y = True
+            #else:
+            #    smaller_y = True
+
+            #angle = math.tan((target_x-self.x)/(target_y-self.y))
+            angle = math.atan2(target_y - self.y, target_x - self.x)
+
+            change_x = speed * math.cos(angle)
+            change_y = speed * math.sin(angle)
+
+            self.x += change_x
+            self.y += change_y
+
+            if (smaller_x and self.x >= target_x):
                 self.x = target_x
-            #move in y
-            if (target_y > self.y + speed):
-                self.y += speed
-            elif (target_y < self.y - speed):
-                self.y -= speed
-            else:
                 self.y = target_y
+            elif ((not smaller_x) and self.x <= target_x):
+                self.x = target_x
+                self.y = target_y
+                            
+            #move in x
+            #if (target_x > self.x + speed):
+            #    self.x += speed
+            #elif (target_x < self.x - speed):
+            #    self.x -= speed
+            #else:
+            #    self.x = target_x
+            #move in y
+            #if (target_y > self.y + speed):
+            #    self.y += speed
+            #elif (target_y < self.y - speed):
+            #    self.y -= speed
+            #else:
+            #    self.y = target_y
 
     #Override draw_self from drawable_object
     def draw_self(self, zoom, screen_x, screen_y, canvas, mode, image_list):
