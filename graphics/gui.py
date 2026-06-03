@@ -3,6 +3,7 @@ from PIL import Image, ImageTk
 import json
 
 import drawable_object
+from graphics import keybinds
 import terrain.square as square
 import constants
 
@@ -28,6 +29,8 @@ class GUI():
         #zoom camera
         self.zoom_in = False
         self.zoom_out = False
+
+        self.keybindings = keybinds.Keybinds()
 
         #Python will garbage collect images that tkinter needs to display on canvas
         #So save open images to prevent this 
@@ -218,21 +221,21 @@ class GUI():
         else:
             if (event.type == "2"):
                 #start panning screen
-                if (event.keysym == "Up"):
+                if (event.keysym == self.keybindings.pan_screen_up):
                     self.pan_up = True
                     self.panning = True
-                elif (event.keysym == "Down"):
+                elif (event.keysym == self.keybindings.pan_screen_down):
                     self.pan_down = True
                     self.panning = True
-                elif (event.keysym == "Left"):
+                elif (event.keysym == self.keybindings.pan_screen_left):
                     self.pan_left = True
                     self.panning = True
-                elif (event.keysym == "Right"):
+                elif (event.keysym == self.keybindings.pan_screen_right):
                     self.pan_right = True
                     self.panning = True
-                elif (event.keysym == "plus"):
+                elif (event.keysym == self.keybindings.zoom_screen_in):
                     self.zoom_in = True
-                elif (event.keysym == "minus"):
+                elif (event.keysym == self.keybindings.zoom_screen_out):
                     self.zoom_out = True
                 else:
                     x, y = self.get_grid_square(event.x, event.y)
@@ -253,21 +256,21 @@ class GUI():
         else:
             if (event.type == "3"):
                 #stop pan screen (arrow keys for now)
-                if (event.keysym == "Up"):
+                if (event.keysym == self.keybindings.pan_screen_up):
                     self.pan_up = False
                     self.panning = False
-                elif (event.keysym == "Down"):
+                elif (event.keysym == self.keybindings.pan_screen_down):
                     self.pan_down = False
                     self.panning = False
-                elif (event.keysym == "Left"):
+                elif (event.keysym == self.keybindings.pan_screen_left):
                     self.pan_left = False
                     self.panning = False
-                elif (event.keysym == "Right"):
+                elif (event.keysym == self.keybindings.pan_screen_right):
                     self.pan_right = False
                     self.panning = False
-                elif (event.keysym == "plus"):
+                elif (event.keysym == self.keybindings.zoom_screen_in):
                     self.zoom_in = False
-                elif (event.keysym == "minus"):
+                elif (event.keysym == self.keybindings.zoom_screen_out):
                     self.zoom_out = False
                 elif (event.keysym == "Return"):
                     self.world_host.create_projectile(self.world["2x1"], self.world["Giles Corey Hero"])

@@ -1,4 +1,4 @@
-import gui
+import graphics.gui as gui
 import logic
 
 class Main():

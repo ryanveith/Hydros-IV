@@ -19,7 +19,7 @@ class Projectile(drawable_object.Drawable_Object):
 
 
             #update position
-            speed = 5
+            speed = 10
 
             target_x = ((self.target.x + (self.target.y % 2)/2) * constants.TILE_WIDTH) #- self.target.width/2
             target_y =  (self.target.y * constants.TILE_HEIGHT) - self.target.height/2
