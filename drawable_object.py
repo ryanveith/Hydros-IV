@@ -18,6 +18,8 @@ class Drawable_Object():
 
     def draw_self(self, zoom, screen_x, screen_y, canvas, mode, image_list):
         if (self.tkinter_id == None):
+            #save canvas
+
             #This is a new object that needs to get added
             object_image = ImageTk.PhotoImage(Image.open(self.image_file).resize((int(zoom / 100 * self.width), int(zoom / 100 * self.height))))
             self.tkinter_id = canvas.create_image(
@@ -40,3 +42,6 @@ class Drawable_Object():
                 canvas.itemconfig(self.tkinter_id, image=object_image)
                 #prevent image from being garbage collected
                 image_list[self.tkinter_id] = object_image
+
+    def clear_image(self, canvas):
+        canvas.delete(self.tkinter_id)

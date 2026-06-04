@@ -4,6 +4,8 @@ import json
 
 import drawable_object
 from graphics import keybinds
+from units import unit
+import drawable_object
 import terrain.square as square
 import constants
 
@@ -31,6 +33,8 @@ class GUI():
         self.zoom_out = False
 
         self.keybindings = keybinds.Keybinds()
+
+        self.selected = []
 
         #Python will garbage collect images that tkinter needs to display on canvas
         #So save open images to prevent this 
@@ -89,10 +93,10 @@ class GUI():
 
         #key pressed
         self.root.bind("<KeyPress>", self.key_pressed)
-        self.root.bind("<ButtonPress-1>", self.key_pressed)
+        self.root.bind("<ButtonPress-1>", self.button_pressed)
 
         self.root.bind("<KeyRelease>", self.key_released)
-        self.root.bind("<ButtonRelease-1>", self.key_released)
+        self.root.bind("<ButtonRelease-1>", self.button_released)
         
         #<Button-1>: Left mouse button click.
         #<Button-2>: Middle mouse button (scroll wheel) click.
@@ -172,7 +176,16 @@ class GUI():
         object_to_draw: drawable_object.Drawable_Object
         for object_to_draw in self.world.values():
             object_to_draw.draw_self(self.zoom, self.screen_x, self.screen_y, self.canvas, mode, self.image_list)
-            
+
+        #Draw halos for everything that is selected?
+        #Halos should be a drawable object or extension/child of it though
+        if (self.selected != None):
+            unit: drawable_object.Drawable_Object
+            for unit, halo in self.selected:
+                halo.x = unit.x
+                halo.y = unit.y
+                halo.draw_self(self.zoom, self.screen_x, self.screen_y, self.canvas, mode, self.image_list)
+   
             
 
     def pan_screen(self, direction, amount):
@@ -212,37 +225,76 @@ class GUI():
         x = round(x/constants.TILE_WIDTH - (y % 2)/2)
         return (x, y)
 
+    def button_pressed(self, event):
+        event.keysym = "mouse_"+str(event.num)
+        self.key_pressed(event)
+
     #by default is doing mouse and keys so first step is probably distingishing event type?
     #could also just bind them to different events, only downside of this is it means re-mapping controls cant switch between mouse/key nicely
     #In the end it is going to get passes to world logic if it is not a gui change so...    
     def key_pressed(self, event):
+        #try
+
         if (self.state == 0):
             return
         else:
-            if (event.type == "2"):
-                #start panning screen
-                if (event.keysym == self.keybindings.pan_screen_up):
-                    self.pan_up = True
-                    self.panning = True
-                elif (event.keysym == self.keybindings.pan_screen_down):
-                    self.pan_down = True
-                    self.panning = True
-                elif (event.keysym == self.keybindings.pan_screen_left):
-                    self.pan_left = True
-                    self.panning = True
-                elif (event.keysym == self.keybindings.pan_screen_right):
-                    self.pan_right = True
-                    self.panning = True
-                elif (event.keysym == self.keybindings.zoom_screen_in):
-                    self.zoom_in = True
-                elif (event.keysym == self.keybindings.zoom_screen_out):
-                    self.zoom_out = True
-                else:
-                    x, y = self.get_grid_square(event.x, event.y)
-                    if (self.world.get(str(x)+"x"+str(y)) != None):
-                        self.world["Giles Corey Hero"].pathfind(self.world, x, y)
+            #first there should be a check that a gui element is not been clicked
+            #This is because multiple "actions" can have the same keybind (think interact and select unit which are both left click)
+
+            #start panning screen
+            if (event.keysym == self.keybindings.pan_screen_up):
+                self.pan_up = True
+                self.panning = True
+            elif (event.keysym == self.keybindings.pan_screen_down):
+                self.pan_down = True
+                self.panning = True
+            elif (event.keysym == self.keybindings.pan_screen_left):
+                self.pan_left = True
+                self.panning = True
+            elif (event.keysym == self.keybindings.pan_screen_right):
+                self.pan_right = True
+                self.panning = True
+            elif (event.keysym == self.keybindings.zoom_screen_in):
+                self.zoom_in = True
+            elif (event.keysym == self.keybindings.zoom_screen_out):
+                self.zoom_out = True
+            elif(event.keysym == self.keybindings.select):
+                #get square clicked on
+                square_clicked_x, square_clicked_y = self.get_grid_square(event.x, event.y)
+                #check square exists
+                #for now only one world, no multiple moving parts - in future get_grid_square prob has to return world
+                clicked_tile: square.Square = self.world.get(str(square_clicked_x)+"x"+str(square_clicked_y))
+                if (clicked_tile != None):
+                    print(clicked_tile)
+                    #if it is a unit select it
+                    #for now only select untis
+                    clicked_unit = clicked_tile.occupied
+                    if (clicked_unit != None and isinstance(clicked_unit, unit.Unit)):
+                        print("Unit Clicked:", clicked_unit)
+                        #Tuple of (unit, halo), where unit is the unit slected, halso is a drawable object to show its selected
+
+                        #clear images from canvas (since this does not happen during garbage collection)
+                        for selected_unit, halo in self.selected:
+                            halo.clear_image(self.canvas)
+
+                        self.selected = [ (clicked_unit, drawable_object.Drawable_Object(clicked_unit.x, clicked_unit.y, "halo", constants.TILE_WIDTH, int(constants.TILE_HEIGHT / 8), "shadow.png")) ]
+                    else:
+                        print("cleared selection")
+
+                        #clear images from canvas (since this does not happen during garbage collection)
+                        for selected_unit, halo in self.selected:
+                            halo.clear_image(self.canvas)
+                        self.selected = []
+            else:
+                print(event, event.keysym)
+                x, y = self.get_grid_square(event.x, event.y)
+                if (self.world.get(str(x)+"x"+str(y)) != None):
+                    self.world["Giles Corey Hero"].pathfind(self.world, x, y)
                 
 
+    def button_released(self, event):
+        event.keysym = "mouse_"+str(event.num)
+        self.key_released(event)
             
     def key_released(self, event):
         if (self.state == 0):
@@ -254,25 +306,24 @@ class GUI():
                     print("joining world")
                     self.join_world()
         else:
-            if (event.type == "3"):
-                #stop pan screen (arrow keys for now)
-                if (event.keysym == self.keybindings.pan_screen_up):
-                    self.pan_up = False
-                    self.panning = False
-                elif (event.keysym == self.keybindings.pan_screen_down):
-                    self.pan_down = False
-                    self.panning = False
-                elif (event.keysym == self.keybindings.pan_screen_left):
-                    self.pan_left = False
-                    self.panning = False
-                elif (event.keysym == self.keybindings.pan_screen_right):
-                    self.pan_right = False
-                    self.panning = False
-                elif (event.keysym == self.keybindings.zoom_screen_in):
-                    self.zoom_in = False
-                elif (event.keysym == self.keybindings.zoom_screen_out):
-                    self.zoom_out = False
-                elif (event.keysym == "Return"):
-                    self.world_host.create_projectile(self.world["2x1"], self.world["Giles Corey Hero"])
+            #stop pan screen (arrow keys for now)
+            if (event.keysym == self.keybindings.pan_screen_up):
+                self.pan_up = False
+                self.panning = False
+            elif (event.keysym == self.keybindings.pan_screen_down):
+                self.pan_down = False
+                self.panning = False
+            elif (event.keysym == self.keybindings.pan_screen_left):
+                self.pan_left = False
+                self.panning = False
+            elif (event.keysym == self.keybindings.pan_screen_right):
+                self.pan_right = False
+                self.panning = False
+            elif (event.keysym == self.keybindings.zoom_screen_in):
+                self.zoom_in = False
+            elif (event.keysym == self.keybindings.zoom_screen_out):
+                self.zoom_out = False
+            elif (event.keysym == "Return"):
+                self.world_host.create_projectile(self.world["2x1"], self.world["Giles Corey Hero"])
 
         

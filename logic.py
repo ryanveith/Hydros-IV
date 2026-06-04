@@ -31,6 +31,7 @@ class Logic():
         #spawn_location = next((spot for spot in self.state if spot.x == 0 and spot.y == 0), None) 
         #spawn_location.occupied = unit
         self.state[player["name"]+" Hero"] = hero_unit
+        self.state["0x0"].occupied = hero_unit
 
         #self.broadcast_world()
     
