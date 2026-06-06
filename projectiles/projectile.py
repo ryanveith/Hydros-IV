@@ -2,7 +2,7 @@ import math
 from tkinter import *
 from PIL import Image, ImageTk
 
-import constants
+import utility.constants as constants
 import drawable_object
 
 class Projectile(drawable_object.Drawable_Object):
@@ -11,7 +11,7 @@ class Projectile(drawable_object.Drawable_Object):
         self.target = target
         self.lifetime = 500
     
-    def update_self(self):
+    def update_self(self, world_logic):
         if (self.lifetime <= 0):
             return "Timeout" 
         else:

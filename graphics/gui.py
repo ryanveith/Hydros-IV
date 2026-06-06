@@ -7,7 +7,7 @@ from graphics import keybinds
 from units import unit
 import drawable_object
 import terrain.square as square
-import constants
+import utility.constants as constants
 
 class GUI():
     def __init__(self, world_logic):
@@ -221,9 +221,9 @@ class GUI():
         x -= self.screen_x
         y -= self.screen_y
         #Get aprox gridspace (prioritizes being fast over being correct)
-        y = round(y/constants.TILE_HEIGHT + 0.5)
+        y: int = round(y/constants.TILE_HEIGHT + 0.5)
         x = round(x/constants.TILE_WIDTH - (y % 2)/2)
-        return (x, y)
+        return (int(x), int(y))
 
     def button_pressed(self, event):
         event.keysym = "mouse_"+str(event.num)
@@ -277,7 +277,7 @@ class GUI():
                         for selected_unit, halo in self.selected:
                             halo.clear_image(self.canvas)
 
-                        self.selected = [ (clicked_unit, drawable_object.Drawable_Object(clicked_unit.x, clicked_unit.y, "halo", constants.TILE_WIDTH, int(constants.TILE_HEIGHT / 8), "shadow.png")) ]
+                        self.selected = [ (clicked_unit, drawable_object.Drawable_Object(clicked_unit.x, clicked_unit.y, "halo", constants.TILE_WIDTH, int(constants.TILE_HEIGHT / 2), "shadow.png")) ]
                     else:
                         print("cleared selection")
 
@@ -285,11 +285,18 @@ class GUI():
                         for selected_unit, halo in self.selected:
                             halo.clear_image(self.canvas)
                         self.selected = []
-            else:
-                print(event, event.keysym)
+            elif(event.keysym == self.keybindings.move_unit):
                 x, y = self.get_grid_square(event.x, event.y)
                 if (self.world.get(str(x)+"x"+str(y)) != None):
-                    self.world["Giles Corey Hero"].pathfind(self.world, x, y)
+                    #self.world["Giles Corey Hero"].pathfind(self.world, x, y)
+
+                    if (len(self.selected) > 0):
+                        for moveable_unit, halo in self.selected:
+                            moveable_unit.move_unit(self.world, str(x)+"x"+str(y))
+
+            else:
+                print(event, event.keysym)
+               
                 
 
     def button_released(self, event):

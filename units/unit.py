@@ -1,10 +1,68 @@
 import drawable_object
+import utility.action_variables as ACTIONS
+import utility.constants as CONSTANTS
 
 import heapq
 
 class Unit(drawable_object.Drawable_Object):
-    def __init__(self, x, y, tag):
+    def __init__(self, x: int, y: int, tag):
         super().__init__(x, y, tag, 100, 100, "elfling.png")
+        self.player_commands_list = []
+        self.implement_commands_list = []
+
+    def update_self(self, logic):
+        #return super().update_self()
+        if (len(self.implement_commands_list) == 0):
+            return None
+        #command, context = self.implement_commands_list[0]
+
+        print("moving?", self.x_offset, self.y_offset)
+        if(self.x_offset == 0 and self.y_offset == 0):
+            print("returned commands list", self.implement_commands_list)
+            return self.implement_commands_list[0]
+        else:
+            ticks_to_move = 80
+            if (self.x_offset > 0):
+                self.x_offset = max(self.x_offset - int (CONSTANTS.TILE_WIDTH / ticks_to_move), 0)
+            elif (self.x_offset < 0):
+                self.x_offset = min(self.x_offset + int (CONSTANTS.TILE_WIDTH / ticks_to_move), 0)
+            if (self.y_offset > 0):
+                self.y_offset = max(self.y_offset - int (CONSTANTS.TILE_HEIGHT / ticks_to_move), 0)
+            elif (self.y_offset < 0):
+                self.y_offset = min(self.y_offset + int (CONSTANTS.TILE_HEIGHT / ticks_to_move), 0)
+            
+
+
+    def move_unit(self, world, destination: str):
+        print("moving unit")
+        start_tile = world.get(str(self.x)+"x"+str(self.y))
+        end_tile = world.get(destination)
+        if (start_tile == None or end_tile == None):
+            raise NotImplementedError("Start or End destination does not exist, and I have not decided how to handle it")
+        route = self.a_star(world, start_tile, end_tile)
+        if (route == None):
+            raise NotImplementedError("No route found, and I have not decided how to handle it")
+        
+        print("Path found:")
+        path_string = ""
+        path_list: list[str] = []
+        while(route.path != None):
+            path_string = ("("+str(route.current_tile.x)+", "+str(route.current_tile.y)+"), "+path_string)
+            path_list.insert(0, ""+str(route.current_tile.x)+"x"+str(route.current_tile.y)+"")
+            route = route.path
+            print(path_list)
+        print(path_string)
+        
+        #clear implment comands and rebuild it
+        self.implement_commands_list.clear()
+
+        tile: str
+        for tile in path_list:
+            self.implement_commands_list.append((ACTIONS.MOVE, tile))
+
+        print("starting moving")
+        print(self.implement_commands_list)
+        print("end test debug")
 
     def pathfind(self, world, x, y):
         print("pathfinding to: "+str(x)+" "+str(y)+", from: "+str(self.x)+", "+str(self.y))
@@ -18,10 +76,14 @@ class Unit(drawable_object.Drawable_Object):
         
         print("Path found:")
         path_string = ""
+        path_list: list[str] = []
         while(route.path != None):
             path_string = ("("+str(route.current_tile.x)+", "+str(route.current_tile.y)+"), "+path_string)
+            path_list.insert(0, "("+str(route.current_tile.x)+", "+str(route.current_tile.y)+"), ")
             route = route.path
         print(path_string)
+    
+        return path_list
 
 
     def a_star(self, world, start_tile: drawable_object.Drawable_Object, goal_tile: drawable_object.Drawable_Object):

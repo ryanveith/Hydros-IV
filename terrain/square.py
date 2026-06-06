@@ -1,5 +1,5 @@
 import drawable_object
-import constants
+import utility.constants as constants
 
 class Square(drawable_object.Drawable_Object):
     def __init__(self, x, y):

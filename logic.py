@@ -1,8 +1,9 @@
-import constants
+import utility.constants as constants
 import drawable_object
 import terrain.square as square
 import units.unit as unit
 from projectiles.projectile import Projectile
+import utility.action_variables as ACTIONS
 
 import json
 
@@ -47,7 +48,28 @@ class Logic():
 
         object: drawable_object.Drawable_Object
         for object in self.state.values():
-            object.update_self()
+            action = object.update_self(self)
+            if (action != None):
+                command, context = action
+
+                if (command == ACTIONS.MOVE):
+                    
+                    new_locations = context.split("x")
+                    old_spot = self.state.get(str(object.x)+"x"+str(object.y))
+                    print("MOVE COMMANDS", new_locations)
+                    object.x = int(new_locations[0])
+                    object.y = int(new_locations[1])
+                    new_spot = self.state.get(str(object.x)+"x"+str(object.y))
+                    if(old_spot == None or new_spot == None):
+                        raise IndexError("The given square cords were not withing the dict")
+                    old_spot.occupied = None
+                    if (new_spot.occupied != None):
+                        raise NotImplementedError("Do not have unit collision yet")
+                    new_spot.occupied = object
+
+                    print("context", context, type(context))
+                    object.implement_commands_list.pop(0)
+                    
 
         #send updated state
         self.broadcast_world()
