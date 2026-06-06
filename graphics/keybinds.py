@@ -10,6 +10,6 @@ class Keybinds():
 
         #selection
         self.select = "mouse_1"
-        self.multiselect_toggle = ""
+        self.multiselect_toggle = "shift"
 
         self.move_unit = "m"

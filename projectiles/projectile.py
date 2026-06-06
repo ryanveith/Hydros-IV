@@ -2,7 +2,7 @@ import math
 from tkinter import *
 from PIL import Image, ImageTk
 
-import utility.constants as constants
+import utility.constants as CONSTANTS
 import drawable_object
 
 class Projectile(drawable_object.Drawable_Object):
@@ -13,34 +13,35 @@ class Projectile(drawable_object.Drawable_Object):
     
     def update_self(self, world_logic):
         if (self.lifetime <= 0):
+            # TODO - add handling for a projectile timing out
             return "Timeout" 
         else:
             self.lifetime -= 1
 
-
-            #update position
+            # Update position
             speed = 10
 
-            target_x = ((self.target.x + (self.target.y % 2)/2) * constants.TILE_WIDTH) #- self.target.width/2
-            target_y =  (self.target.y * constants.TILE_HEIGHT) - self.target.height/2
+            target_x = ((self.target.x + (self.target.y % 2)/2) * CONSTANTS.TILE_WIDTH) #- self.target.width/2
+            target_y =  (self.target.y * CONSTANTS.TILE_HEIGHT) - self.target.height/2
             
 
-            #if already there dont move
+            # If already there dont move
             if (self.x == target_x and self.y == target_y):
-                print("no collision has been implemented yet")
+                # TODO - add collision with unit/target for projectile
                 return
-            #save data for preventing overshooting target
+            
+            # Data for preventing overshooting target
             if (self.x < target_x):
                 smaller_x = True
             else:
                 smaller_x = False
-            #Should not need to check x since we are facing desination perfectly so if we overshoot
-            #if (self.y < target_y):
+            # Do not currenlty need to check x since we are facing desination perfectly so if we overshoot one we have arrived
+            # if (self.y < target_y):
             #    smaller_y = True
-            #else:
+            # else:
             #    smaller_y = True
 
-            #angle = math.tan((target_x-self.x)/(target_y-self.y))
+            # By default projectiles directly twoards the target
             angle = math.atan2(target_y - self.y, target_x - self.x)
 
             change_x = speed * math.cos(angle)
@@ -49,13 +50,15 @@ class Projectile(drawable_object.Drawable_Object):
             self.x += change_x
             self.y += change_y
 
+            # TODO - decide if this should use targets offset at all and if it should do collison here
             if (smaller_x and self.x >= target_x):
                 self.x = target_x
                 self.y = target_y
             elif ((not smaller_x) and self.x <= target_x):
                 self.x = target_x
                 self.y = target_y
-                            
+
+            # Old code for a projectile that moves a set speed in x and y direction rather then total distance             
             #move in x
             #if (target_x > self.x + speed):
             #    self.x += speed
@@ -71,11 +74,12 @@ class Projectile(drawable_object.Drawable_Object):
             #else:
             #    self.y = target_y
 
-    #Override draw_self from drawable_object
+    # Override draw_self from drawable_object
+    # This is needed since this does not stay on the grid system or have a grid space but rather measure xy in pixels
     def draw_self(self, zoom, screen_x, screen_y, canvas, mode, image_list):
         if (self.tkinter_id == None):
-            #This is a new object that needs to get added
-            #Note that x and y are in pixels not tiles
+            # This is a new object that needs to get added
+            # Note that x and y are in pixels not tiles
             object_image = ImageTk.PhotoImage(Image.open(self.image_file).resize((int(zoom / 100 * self.width), int(zoom / 100 * self.height))))
             self.tkinter_id = canvas.create_image(
                     int(zoom / 100 * (self.x + screen_x)), 
@@ -83,17 +87,19 @@ class Projectile(drawable_object.Drawable_Object):
                     image=object_image, 
                     anchor="center",
                     tag=self.tag)
-            #prevent image from being garbage collected
+            # Prevent image from being garbage collected
+            # TODO - Currently should just use self, if they are all individual images
             image_list[self.tkinter_id] = object_image
         else:
-            #Update Objects
+            # Update Existing Objects
             canvas.coords(
                 self.tkinter_id, 
                 int(zoom / 100 * (self.x + screen_x)), 
                 int(zoom / 100 * (self.y + screen_y)))
-            #zoom images
+            # Zoom images
             if (mode == "zoom screen"):
                 object_image = ImageTk.PhotoImage(Image.open(self.image_file).resize((int(zoom / 100 * self.width), int(zoom / 100 * self.height))))
                 canvas.itemconfig(self.tkinter_id, image=object_image)
-                #prevent image from being garbage collected
+                # Prevent image from being garbage collected
+                # TODO - Currently should just use self, if they are all individual images
                 image_list[self.tkinter_id] = object_image

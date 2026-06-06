@@ -1,4 +1,4 @@
-import utility.constants as constants
+import utility.constants as CONSTANTS
 import drawable_object
 import terrain.square as square
 import units.unit as unit
@@ -12,7 +12,8 @@ class Logic():
     def __init__(self):
         self.state = {
             "0x0":square.Square(0,0), "1x0":square.Square(1,0), "2x0":square.Square(2,0), 
-            "0x1":square.Square(0,1), "1x1":square.Square(1,1), "2x1":square.Square(2,1)}
+            "0x1":square.Square(0,1), "1x1":square.Square(1,1), "2x1":square.Square(2,1),
+            "0x2":square.Square(0,2), "1x2":square.Square(1,2), "2x2":square.Square(2,2)}
         self.playerlist = []
         self.tkinter_mainloop_root = None
         self.time = 0
@@ -76,14 +77,14 @@ class Logic():
                     # 0x0   1x0   2x0
                     #    0x1   1x1   2x1
                     if (object.x > new_x or (object.x == new_x and (object.y % 2) == 1)):
-                        object.x_offset += int(constants.TILE_WIDTH/2)
+                        object.x_offset += int(CONSTANTS.TILE_WIDTH/2)
                     else:
-                        object.x_offset -= int(constants.TILE_WIDTH/2)
+                        object.x_offset -= int(CONSTANTS.TILE_WIDTH/2)
 
                     if (object.y > new_y):
-                        object.y_offset += int(constants.TILE_HEIGHT/2)
+                        object.y_offset += int(CONSTANTS.TILE_HEIGHT/2)
                     else:
-                        object.y_offset -= int(constants.TILE_HEIGHT/2)
+                        object.y_offset -= int(CONSTANTS.TILE_HEIGHT/2)
 
                     #set the units x y to be square they are walking into
                     object.x = new_x
@@ -107,8 +108,8 @@ class Logic():
     def create_projectile(self, tile, target):
         print("Projectile created", tile, target)
         self.state[str(self.increment_id)] = Projectile(
-            x=(tile.x - (tile.y % 2)/2) * constants.TILE_WIDTH, 
-            y=tile.y * constants.TILE_HEIGHT, 
+            x=(tile.x - (tile.y % 2)/2) * CONSTANTS.TILE_WIDTH, 
+            y=tile.y * CONSTANTS.TILE_HEIGHT, 
             tag=str(self.increment_id), 
             target=target)
         self.increment_id += 1
