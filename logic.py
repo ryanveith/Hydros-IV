@@ -53,21 +53,44 @@ class Logic():
                 command, context = action
 
                 if (command == ACTIONS.MOVE):
-                    
+                    #split name of the desination tile into x y cords
                     new_locations = context.split("x")
+                    new_x = int(new_locations[0])
+                    new_y = int(new_locations[1])
+                    
                     old_spot = self.state.get(str(object.x)+"x"+str(object.y))
+                    new_spot = self.state.get(str(new_x)+"x"+str(new_y))
                     print("MOVE COMMANDS", new_locations)
-                    object.x = int(new_locations[0])
-                    object.y = int(new_locations[1])
-                    new_spot = self.state.get(str(object.x)+"x"+str(object.y))
+
+                    #check spot is actually free to move into
+                    
                     if(old_spot == None or new_spot == None):
                         raise IndexError("The given square cords were not withing the dict")
-                    old_spot.occupied = None
                     if (new_spot.occupied != None):
                         raise NotImplementedError("Do not have unit collision yet")
+                    #update pointers for ocupied spots
+                    old_spot.occupied = None
                     new_spot.occupied = object
+                    
+                    #do offsets for animating the walk
+                    # 0x0   1x0   2x0
+                    #    0x1   1x1   2x1
+                    if (object.x > new_x or (object.x == new_x and (object.y % 2) == 1)):
+                        object.x_offset += int(constants.TILE_WIDTH/2)
+                    else:
+                        object.x_offset -= int(constants.TILE_WIDTH/2)
+
+                    if (object.y > new_y):
+                        object.y_offset += int(constants.TILE_HEIGHT/2)
+                    else:
+                        object.y_offset -= int(constants.TILE_HEIGHT/2)
+
+                    #set the units x y to be square they are walking into
+                    object.x = new_x
+                    object.y = new_y
 
                     print("context", context, type(context))
+                    #This "action" was completed so remove it from list
                     object.implement_commands_list.pop(0)
                     
 

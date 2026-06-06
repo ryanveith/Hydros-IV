@@ -36,8 +36,8 @@ class Drawable_Object():
             #Update Objects
             canvas.coords(
                 self.tkinter_id, 
-                int(zoom / 100 * ((self.x + (self.y % 2)/2) * constants.TILE_WIDTH + screen_x)), 
-                int(zoom / 100 * (self.y * constants.TILE_HEIGHT + screen_y)))
+                int(zoom / 100 * ((self.x + (self.y % 2)/2) * constants.TILE_WIDTH + screen_x) + self.x_offset), 
+                int(zoom / 100 * (self.y * constants.TILE_HEIGHT + screen_y)) + self.y_offset)
             #zoom images
             if (mode == "zoom screen"):
                 object_image = ImageTk.PhotoImage(Image.open(self.image_file).resize((int(zoom / 100 * self.width), int(zoom / 100 * self.height))))

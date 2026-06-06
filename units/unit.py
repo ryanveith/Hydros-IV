@@ -11,27 +11,28 @@ class Unit(drawable_object.Drawable_Object):
         self.implement_commands_list = []
 
     def update_self(self, logic):
+        #Do movement animation
+        ticks_to_move = 8
+        if (self.x_offset > 0):
+            self.x_offset = max(self.x_offset - int (CONSTANTS.TILE_WIDTH / ticks_to_move), 0)
+        elif (self.x_offset < 0):
+            self.x_offset = min(self.x_offset + int (CONSTANTS.TILE_WIDTH / ticks_to_move), 0)
+        if (self.y_offset > 0):
+            self.y_offset = max(self.y_offset - int (CONSTANTS.TILE_HEIGHT / ticks_to_move), 0)
+        elif (self.y_offset < 0):
+            self.y_offset = min(self.y_offset + int (CONSTANTS.TILE_HEIGHT / ticks_to_move), 0)
+
         #return super().update_self()
         if (len(self.implement_commands_list) == 0):
             return None
+        
+        #If there is an action to preform return the required data to do that
         #command, context = self.implement_commands_list[0]
-
         print("moving?", self.x_offset, self.y_offset)
         if(self.x_offset == 0 and self.y_offset == 0):
             print("returned commands list", self.implement_commands_list)
             return self.implement_commands_list[0]
-        else:
-            ticks_to_move = 80
-            if (self.x_offset > 0):
-                self.x_offset = max(self.x_offset - int (CONSTANTS.TILE_WIDTH / ticks_to_move), 0)
-            elif (self.x_offset < 0):
-                self.x_offset = min(self.x_offset + int (CONSTANTS.TILE_WIDTH / ticks_to_move), 0)
-            if (self.y_offset > 0):
-                self.y_offset = max(self.y_offset - int (CONSTANTS.TILE_HEIGHT / ticks_to_move), 0)
-            elif (self.y_offset < 0):
-                self.y_offset = min(self.y_offset + int (CONSTANTS.TILE_HEIGHT / ticks_to_move), 0)
-            
-
+        #else:
 
     def move_unit(self, world, destination: str):
         print("moving unit")
