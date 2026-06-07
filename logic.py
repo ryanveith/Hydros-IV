@@ -58,38 +58,38 @@ class Logic():
                     
                     old_spot = self.state.get(str(object.x)+"x"+str(object.y))
                     new_spot = self.state.get(str(new_x)+"x"+str(new_y))
-                    print("MOVE COMMANDS", new_locations)
-
+                    
                     #check spot is actually free to move into
-                    
                     if(old_spot == None or new_spot == None):
-                        raise IndexError("The given square cords were not withing the dict")
+                        raise IndexError("The given square cords were not within the dict")
                     if (new_spot.occupied != None):
-                        raise NotImplementedError("Do not have unit collision yet")
-                    #update pointers for ocupied spots
-                    old_spot.occupied = None
-                    new_spot.occupied = object
-                    
-                    #do offsets for animating the walk
-                    # 0x0   1x0   2x0
-                    #    0x1   1x1   2x1
-                    if (object.x > new_x or (object.x == new_x and (object.y % 2) == 1)):
-                        object.x_offset += int(CONSTANTS.TILE_WIDTH/2)
+                        object.movement_blocked(self.state)
+                        
+                        #raise NotImplementedError("Do not have unit collision yet")
                     else:
-                        object.x_offset -= int(CONSTANTS.TILE_WIDTH/2)
+                        #update pointers for ocupied spots
+                        old_spot.occupied = None
+                        new_spot.occupied = object
+                        
+                        #do offsets for animating the walk
+                        # 0x0   1x0   2x0
+                        #    0x1   1x1   2x1
+                        if (object.x > new_x or (object.x == new_x and (object.y % 2) == 1)):
+                            object.x_offset += int(CONSTANTS.TILE_WIDTH/2)
+                        else:
+                            object.x_offset -= int(CONSTANTS.TILE_WIDTH/2)
 
-                    if (object.y > new_y):
-                        object.y_offset += int(CONSTANTS.TILE_HEIGHT/2)
-                    else:
-                        object.y_offset -= int(CONSTANTS.TILE_HEIGHT/2)
+                        if (object.y > new_y):
+                            object.y_offset += int(CONSTANTS.TILE_HEIGHT/2)
+                        else:
+                            object.y_offset -= int(CONSTANTS.TILE_HEIGHT/2)
 
-                    #set the units x y to be square they are walking into
-                    object.x = new_x
-                    object.y = new_y
+                        #set the units x y to be square they are walking into
+                        object.x = new_x
+                        object.y = new_y
 
-                    print("context", context, type(context))
-                    #This "action" was completed so remove it from list
-                    object.implement_commands_list.pop(0)
+                        #This "action" was completed so remove it from list
+                        object.implement_commands_list.pop(0)
                     
 
         #send updated state

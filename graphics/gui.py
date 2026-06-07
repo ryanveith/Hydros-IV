@@ -8,6 +8,7 @@ from units import unit
 import drawable_object
 import terrain.square as square
 import utility.constants as CONSTANTS
+import utility.action_variables as ACTIONS
 
 class GUI():
     def __init__(self, world_logic):
@@ -230,6 +231,7 @@ class GUI():
         else:
             # First there should be a check that a gui element is not been clicked
             # This is because multiple "actions" can have the same keybind (think interact and select unit which are both left click)
+            # TODO - decide on handling for upper/lower case keysym - should they be treated as distinct or not
 
             # Start panning screen
             if (event.keysym == self.keybindings.pan_screen_up):
@@ -276,13 +278,19 @@ class GUI():
                         else:
                             self.selected = []
             #Move all selected units to destination
-            elif(event.keysym == self.keybindings.move_unit):
+            elif(event.keysym == self.keybindings.move_unit or event.keysym.lower() == self.keybindings.move_unit):
                 x, y = self.get_grid_square(event.x, event.y)
                 if (self.world.get(str(x)+"x"+str(y)) != None):
                     # TODO - don't have a way to handle that multiple units can't actually be in the same space when doing multi unit pathfinding
                     if (len(self.selected) > 0):
-                        for moveable_unit, halo in self.selected:
-                            moveable_unit.move_unit(self.world, str(x)+"x"+str(y))
+                        moveable_unit: unit.Unit
+                        #multiselect means queue movement, normal means override
+                        if (self.multiselect == True):
+                            for moveable_unit, halo in self.selected:
+                                moveable_unit.queue_command(ACTIONS.MOVE, str(x)+"x"+str(y))
+                        else:
+                            for moveable_unit, halo in self.selected:
+                                moveable_unit.set_command(ACTIONS.MOVE, str(x)+"x"+str(y))
 
             else:
                 # Debug message for what key was hit
@@ -327,5 +335,4 @@ class GUI():
             #Debug
             elif (event.keysym == "Return"):
                 self.world_host.create_projectile(self.world["2x1"], self.world["Giles Corey Hero"])
-
         

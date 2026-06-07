@@ -5,14 +5,14 @@ import utility.constants as CONSTANTS
 import heapq
 
 class Unit(drawable_object.Drawable_Object):
-    def __init__(self, x: int, y: int, tag):
+    def __init__(self, x: int, y: int, tag: str):
         super().__init__(x, y, tag, 100, 100, "elfling.png")
-        self.player_commands_list = []
-        self.implement_commands_list = []
+        self.player_commands_list: list[tuple[int, str]] = []
+        self.implement_commands_list: list[tuple[int, str]] = []
 
     def update_self(self, logic):
         # Do Movement Animation (Currenlty just moving entire image in increments)
-        ticks_to_move = 8
+        ticks_to_move: int = 8
         if (self.x_offset > 0):
             self.x_offset = max(self.x_offset - int (CONSTANTS.TILE_WIDTH / ticks_to_move), 0)
         elif (self.x_offset < 0):
@@ -25,25 +25,47 @@ class Unit(drawable_object.Drawable_Object):
         # If there is an action to preform return the required data to do that
         # TODO - need to have a movement cooldown rather then use offset
         # TODO - also a seperate attack cooldown for any units that can move and attack at same time in future
-        if (len(self.implement_commands_list) == 0):
-            return None
         
+        if (len(self.implement_commands_list) == 0):
+            if (len (self.player_commands_list) > 0):
+                command, context = self.player_commands_list[0]
+                if (command == ACTIONS.MOVE):
+                    self.player_commands_list.pop(0)
+                    self.move_unit(logic.get_world(), context)
+            # TODO - decide on ticks waiting before moving to next action in queue
+            # For inteupted actions it makes sense to wait a bit
+            # Waiting at least one tick also simplifies this section since we don't have to keep looking for an action until we find a valid one 
+            return None
+
         # Currenlty only possible aciton in queue is move, and only return an action after the offset it 0
         #command, context = self.implement_commands_list[0]
         if(self.x_offset == 0 and self.y_offset == 0):
             return self.implement_commands_list[0]
         #else:
 
+    def queue_command(self, command: int, context: str):
+        self.player_commands_list.append( (command, context) )
+    
+    def set_command(self, command: int, context: str):
+        self.player_commands_list = [ (command, context) ]
+        self.implement_commands_list.clear()
+
+
     # Add steps requried to move unit to destination to implement_commands_list
-    def move_unit(self, world, destination: str):
-        start_tile = world.get(str(self.x)+"x"+str(self.y))
-        end_tile = world.get(destination)
+    def move_unit(self, world: dict[str, drawable_object.Drawable_Object], destination: str):
+        start_tile: None | drawable_object.Drawable_Object = world.get(str(self.x)+"x"+str(self.y))
+        end_tile: None | drawable_object.Drawable_Object = world.get(destination)
         # TODO - implement not implemented things, first case should not happen, second can definitely happen
         if (start_tile == None or end_tile == None):
-            raise NotImplementedError("Start or End destination does not exist, and I have not decided how to handle it")
+            return
+            # TODO
+            # raise NotImplementedError("Start or End destination does not exist, and I have not decided how to handle it")
         route = self.a_star(world, start_tile, end_tile)
         if (route == None):
-            raise NotImplementedError("No route found, and I have not decided how to handle it")
+            self.implement_commands_list.clear()
+            return
+            # TODO - try pathing to adjacent tiles
+            # raise NotImplementedError("No route found, and I have not decided how to handle it")
         
         # A_Star currently returns "nodes" representing the tiles it traveled, so convert that into a path
         path_list: list[str] = []
@@ -56,6 +78,13 @@ class Unit(drawable_object.Drawable_Object):
         tile: str
         for tile in path_list:
             self.implement_commands_list.append((ACTIONS.MOVE, tile))
+
+    def movement_blocked(self, world: dict[str, drawable_object.Drawable_Object]):
+        command: int
+        context: str
+        command, context = self.implement_commands_list.pop()
+        # If there is no path, then no path is added to list so next thing in player_commands will then start
+        self.move_unit(world, context)
 
     # Return a path to the x, y tile in world from this units location
     # TODO - still work in progress, currenly move unit directly calls A_Star to get around this
@@ -86,7 +115,7 @@ class Unit(drawable_object.Drawable_Object):
     # TODO - improve it to consider things, or just replace with Dijkstra's as the only thing you loose is h(n)
     # Though I do think the end goal is weighted A*, where some terrain can be worse
     # This would also be modifiable to handle teleportation, and even AI unit actions 
-    def a_star(self, world, start_tile: drawable_object.Drawable_Object, goal_tile: drawable_object.Drawable_Object):
+    def a_star(self, world: dict[str, drawable_object.Drawable_Object], start_tile: drawable_object.Drawable_Object, goal_tile: drawable_object.Drawable_Object):
         # create the frontier as a priority queue
         # using heapq this is normal list but use heapq operations on it
         frontier: list[Node] = []
@@ -111,7 +140,8 @@ class Unit(drawable_object.Drawable_Object):
                     up_right = world.get(str(current_tile.x+1)+"x"+str(current_tile.y+1))
                     down_right = world.get(str(current_tile.x+1)+"x"+str(current_tile.y-1))
                 self.connected_tiles = [up_left, down_left, up_right, down_right]
-                self.connected_tiles: list[drawable_object.Drawable_Object] = filter((lambda x: x != None), self.connected_tiles)
+                self.connected_tiles: list[drawable_object.Drawable_Object] = filter((lambda tile: tile != None), self.connected_tiles)
+                self.connected_tiles: list[drawable_object.Drawable_Object] = filter((lambda tile: tile.occupied == None), self.connected_tiles)
 
             def expand(self):
                 children: list[Node] = []
