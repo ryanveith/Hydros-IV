@@ -63,7 +63,7 @@ class Logic():
                     new_x = int(new_locations[0])
                     new_y = int(new_locations[1])
                     
-                    old_spot = self.state.get(str(object.x)+"x"+str(object.y))
+                    old_spot = self.state.get(str(object.tile_x)+"x"+str(object.tile_y))
                     new_spot = self.state.get(str(new_x)+"x"+str(new_y))
                     
                     # Check spot is actually free to move into
@@ -80,19 +80,19 @@ class Logic():
                         # Do offsets for animating the walk
                         # 0x0   1x0   2x0
                         #    0x1   1x1   2x1
-                        if (object.x > new_x or (object.x == new_x and (object.y % 2) == 1)):
+                        if (object.tile_x > new_x or (object.tile_x == new_x and (object.tile_y % 2) == 1)):
                             object.x_offset += int(CONSTANTS.TILE_WIDTH/2)
                         else:
                             object.x_offset -= int(CONSTANTS.TILE_WIDTH/2)
 
-                        if (object.y > new_y):
+                        if (object.tile_y > new_y):
                             object.y_offset += int(CONSTANTS.TILE_HEIGHT/2)
                         else:
                             object.y_offset -= int(CONSTANTS.TILE_HEIGHT/2)
 
                         # Set the units x y to be square they are walking into
-                        object.x = new_x
-                        object.y = new_y
+                        object.tile_x = new_x
+                        object.tile_y = new_y
 
                         # This "action" was completed so remove it from list
                         object.implement_commands_list.pop(0)
@@ -108,7 +108,7 @@ class Logic():
                             
                             if (projectile.target.health <= 0):
                                 self.keys_to_delete.append(projectile.target.key)
-                                self.state[str(projectile.target.x)+"x"+str(projectile.target.y)].occupied = None
+                                self.state[str(projectile.target.tile_x)+"x"+str(projectile.target.tile_y)].occupied = None
                     self.keys_to_delete.append(key)
 
         # Send updated state
@@ -136,7 +136,7 @@ class Logic():
         if (tile.occupied != None):
             #Cannot create unit on top of anohter
             return None
-        hero_unit = unit.Unit(tile.x, tile.y, name, name)
+        hero_unit = unit.Unit(tile.tile_x, tile.tile_y, name, name)
         #spawn_location = next((spot for spot in self.state if spot.x == 0 and spot.y == 0), None) 
         #spawn_location.occupied = unit
         self.state[name] = hero_unit

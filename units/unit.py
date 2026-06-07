@@ -5,10 +5,12 @@ import utility.constants as CONSTANTS
 import heapq
 
 class Unit(drawable_object.Drawable_Object):
-    def __init__(self, x: int, y: int, key: str, tag: str):
-        super().__init__(x, y, key, tag, 100, 100, "elfling.png")
+    def __init__(self, tile_x: int, tile_y: int, key: str, tag: str):
+        super().__init__(tile_x, tile_y, key, tag, 100, 100, "elfling.png")
         self.player_commands_list: list[tuple[int, str]] = []
         self.implement_commands_list: list[tuple[int, str]] = []
+
+        self.my_images.append(drawable_object.Drawable_Image(0, -self.my_images[0].height, self.my_images[0].width, int(self.my_images[0].height/8), "gray_box.png"))
 
         self.health = 100
 
@@ -55,7 +57,7 @@ class Unit(drawable_object.Drawable_Object):
 
     # Add steps requried to move unit to destination to implement_commands_list
     def move_unit(self, world: dict[str, drawable_object.Drawable_Object], destination: str):
-        start_tile: None | drawable_object.Drawable_Object = world.get(str(self.x)+"x"+str(self.y))
+        start_tile: None | drawable_object.Drawable_Object = world.get(str(self.tile_x)+"x"+str(self.tile_y))
         end_tile: None | drawable_object.Drawable_Object = world.get(destination)
         # TODO - implement not implemented things, first case should not happen, second can definitely happen
         if (start_tile == None or end_tile == None):
@@ -72,7 +74,7 @@ class Unit(drawable_object.Drawable_Object):
         # A_Star currently returns "nodes" representing the tiles it traveled, so convert that into a path
         path_list: list[str] = []
         while(route.path != None):
-            path_list.insert(0, ""+str(route.current_tile.x)+"x"+str(route.current_tile.y)+"")
+            path_list.insert(0, ""+str(route.current_tile.tile_x)+"x"+str(route.current_tile.tile_y)+"")
             route = route.path
         # Clear implment comands and add route to it
         self.implement_commands_list.clear()
@@ -91,8 +93,8 @@ class Unit(drawable_object.Drawable_Object):
     # Return a path to the x, y tile in world from this units location
     # TODO - still work in progress, currenly move unit directly calls A_Star to get around this
     def pathfind(self, world, x, y):
-        print("pathfinding to: "+str(x)+" "+str(y)+", from: "+str(self.x)+", "+str(self.y))
-        start_tile = world.get(str(self.x)+"x"+str(self.y))
+        print("pathfinding to: "+str(x)+" "+str(y)+", from: "+str(self.tile_x)+", "+str(self.tile_y))
+        start_tile = world.get(str(self.tile_x)+"x"+str(self.tile_y))
         end_tile = world.get(str(x)+"x"+str(y))
         if (start_tile == None or end_tile == None):
             raise NotImplementedError("Start or End destination does not exist, and I have not decided how to handle it")
@@ -104,8 +106,8 @@ class Unit(drawable_object.Drawable_Object):
         path_string = ""
         path_list: list[str] = []
         while(route.path != None):
-            path_string = ("("+str(route.current_tile.x)+", "+str(route.current_tile.y)+"), "+path_string)
-            path_list.insert(0, "("+str(route.current_tile.x)+", "+str(route.current_tile.y)+"), ")
+            path_string = ("("+str(route.current_tile.tile_x)+", "+str(route.current_tile.tile_y)+"), "+path_string)
+            path_list.insert(0, "("+str(route.current_tile.tile_x)+", "+str(route.current_tile.tile_y)+"), ")
             route = route.path
         print(path_string)
     
@@ -131,16 +133,16 @@ class Unit(drawable_object.Drawable_Object):
                 # But if you are on
                 # 0,1 you can go right to 1,0 and 1,2 and left to 0,0 and 0,2
                 # Therefore the logic depends on if your y cordinate is even or odd
-                if (current_tile.y % 2 == 0):
-                    up_left = world.get(str(current_tile.x-1)+"x"+str(current_tile.y+1))
-                    down_left = world.get(str(current_tile.x-1)+"x"+str(current_tile.y-1))
-                    up_right = world.get(str(current_tile.x)+"x"+str(current_tile.y+1))
-                    down_right = world.get(str(current_tile.x)+"x"+str(current_tile.y-1))
+                if (current_tile.tile_y % 2 == 0):
+                    up_left = world.get(str(current_tile.tile_x-1)+"x"+str(current_tile.tile_y+1))
+                    down_left = world.get(str(current_tile.tile_x-1)+"x"+str(current_tile.tile_y-1))
+                    up_right = world.get(str(current_tile.tile_x)+"x"+str(current_tile.tile_y+1))
+                    down_right = world.get(str(current_tile.tile_x)+"x"+str(current_tile.tile_y-1))
                 else:  
-                    up_left = world.get(str(current_tile.x)+"x"+str(current_tile.y+1))
-                    down_left = world.get(str(current_tile.x)+"x"+str(current_tile.y-1))
-                    up_right = world.get(str(current_tile.x+1)+"x"+str(current_tile.y+1))
-                    down_right = world.get(str(current_tile.x+1)+"x"+str(current_tile.y-1))
+                    up_left = world.get(str(current_tile.tile_x)+"x"+str(current_tile.tile_y+1))
+                    down_left = world.get(str(current_tile.tile_x)+"x"+str(current_tile.tile_y-1))
+                    up_right = world.get(str(current_tile.tile_x+1)+"x"+str(current_tile.tile_y+1))
+                    down_right = world.get(str(current_tile.tile_x+1)+"x"+str(current_tile.tile_y-1))
                 self.connected_tiles = [up_left, down_left, up_right, down_right]
                 self.connected_tiles: list[drawable_object.Drawable_Object] = filter((lambda tile: tile != None), self.connected_tiles)
                 self.connected_tiles: list[drawable_object.Drawable_Object] = filter((lambda tile: tile.occupied == None), self.connected_tiles)
@@ -199,7 +201,7 @@ class Unit(drawable_object.Drawable_Object):
     
     @staticmethod
     def heuristic(current, goal):
-        return abs(current.x - goal.x) + abs(current.y - goal.y)
+        return abs(current.tile_x - goal.tile_x) + abs(current.tile_y - goal.tile_y)
     
     def draw_self(self, zoom, screen_x, screen_y, canvas, mode, image_list):
         if (self.health <= 0):
@@ -207,4 +209,5 @@ class Unit(drawable_object.Drawable_Object):
             self.clear_image(canvas)
         else:
             return super().draw_self(zoom, screen_x, screen_y, canvas, mode, image_list)
+
         

@@ -25,8 +25,8 @@ class Projectile(drawable_object.Drawable_Object):
             self.lifetime -= 1
 
             # Update position
-            target_x: int = ((self.target.x + (self.target.y % 2)/2) * CONSTANTS.TILE_WIDTH) #- self.target.width/2
-            target_y: int =  (self.target.y * CONSTANTS.TILE_HEIGHT) - self.target.height/2
+            target_x: int = ((self.target.tile_x + (self.target.tile_y % 2)/2) * CONSTANTS.TILE_WIDTH)
+            target_y: int =  (self.target.tile_y * CONSTANTS.TILE_HEIGHT) - self.target.my_images[0].height/2
             
 
             # If already there dont move
@@ -35,7 +35,7 @@ class Projectile(drawable_object.Drawable_Object):
                 # return
             
             # Data for preventing overshooting target
-            if (self.x < target_x):
+            if (self.tile_x < target_x):
                 smaller_x = True
             else:
                 smaller_x = False
@@ -46,22 +46,22 @@ class Projectile(drawable_object.Drawable_Object):
             #    smaller_y = True
 
             # By default projectiles directly twoards the target
-            angle = math.atan2(target_y - self.y, target_x - self.x)
+            angle = math.atan2(target_y - self.tile_y, target_x - self.tile_x)
 
             change_x = self.speed * math.cos(angle)
             change_y = self.speed * math.sin(angle)
 
-            self.x += change_x
-            self.y += change_y
+            self.tile_x += change_x
+            self.tile_y += change_y
 
             # TODO - decide if this should use targets offset at all and if it should do collison here
-            if (smaller_x and self.x >= target_x):
-                self.x = target_x
-                self.y = target_y
+            if (smaller_x and self.tile_x >= target_x):
+                self.tile_x = target_x
+                self.tile_y = target_y
                 return (ACTIONS.COLLISION, self.key)
-            elif ((not smaller_x) and self.x <= target_x):
-                self.x = target_x
-                self.y = target_y
+            elif ((not smaller_x) and self.tile_x <= target_x):
+                self.tile_x = target_x
+                self.tile_y = target_y
                 return (ACTIONS.COLLISION, self.key)
 
             # Old code for a projectile that moves a set speed in x and y direction rather then total distance             
@@ -88,8 +88,8 @@ class Projectile(drawable_object.Drawable_Object):
             # Note that x and y are in pixels not tiles
             object_image = ImageTk.PhotoImage(Image.open(self.image_file).resize((int(zoom / 100 * self.width), int(zoom / 100 * self.height))))
             self.tkinter_id = canvas.create_image(
-                    int(zoom / 100 * (self.x + screen_x)), 
-                    int(zoom / 100 * (self.y + screen_y)), 
+                    int(zoom / 100 * (self.tile_x + screen_x)), 
+                    int(zoom / 100 * (self.tile_y + screen_y)), 
                     image=object_image, 
                     anchor="center",
                     tag=self.tag)
@@ -101,8 +101,8 @@ class Projectile(drawable_object.Drawable_Object):
             # Update Existing Objects
             canvas.coords(
                 self.tkinter_id, 
-                int(zoom / 100 * (self.x + screen_x)), 
-                int(zoom / 100 * (self.y + screen_y)))
+                int(zoom / 100 * (self.tile_x + screen_x)), 
+                int(zoom / 100 * (self.tile_y + screen_y)))
             # Zoom images
             if (mode == "zoom screen"):
                 object_image = ImageTk.PhotoImage(Image.open(self.image_file).resize((int(zoom / 100 * self.width), int(zoom / 100 * self.height))))
