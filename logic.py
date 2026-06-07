@@ -22,7 +22,7 @@ class Logic():
     def set_root(self, root):
         self.tkinter_mainloop_root = root
 
-        #Logic needs to have a clock and should probably jut use the self.root.after on the GUI of host
+        # Logic needs to have a clock and should probably jut use the self.root.after on the GUI of host
         self.update_world()
 
     def join(self, player):
@@ -31,27 +31,27 @@ class Logic():
         
         self.create_unit(self.state["0x0"], player["name"]+" Hero")
         self.create_unit(self.state["0x1"], "Debug")
-
-        #self.broadcast_world()
     
     def broadcast_world(self):
-        #send all players a message that the world has updated
-        #this should be kept in such a way that thich can be changed to a network message with new world state
+        # Send all players a message that the world has updated
+        # This should be kept in such a way that thich can be changed to a network message with new world state
         for player in self.playerlist:
-            #currently generate a GUI event that has it get the world state
+            # Currently generate a GUI event that has it get the world state
             (player["root"]).event_generate("<<WorldUpdated>>")
         
     def update_world(self):
         self.time = self.time + 1
+        keys_to_delete = []
 
         object: drawable_object.Drawable_Object
-        for object in self.state.values():
+        key: str
+        for key, object in self.state.items():
             action = object.update_self(self)
             if (action != None):
                 command, context = action
 
                 if (command == ACTIONS.MOVE):
-                    #split name of the desination tile into x y cords
+                    # Split name of the desination tile into x y cords
                     new_locations = context.split("x")
                     new_x = int(new_locations[0])
                     new_y = int(new_locations[1])
@@ -59,19 +59,18 @@ class Logic():
                     old_spot = self.state.get(str(object.x)+"x"+str(object.y))
                     new_spot = self.state.get(str(new_x)+"x"+str(new_y))
                     
-                    #check spot is actually free to move into
+                    # Check spot is actually free to move into
                     if(old_spot == None or new_spot == None):
                         raise IndexError("The given square cords were not within the dict")
                     if (new_spot.occupied != None):
                         object.movement_blocked(self.state)
-                        
-                        #raise NotImplementedError("Do not have unit collision yet")
+                        # raise NotImplementedError("Do not have unit collision yet")
                     else:
-                        #update pointers for ocupied spots
+                        # Update pointers for ocupied spots
                         old_spot.occupied = None
                         new_spot.occupied = object
                         
-                        #do offsets for animating the walk
+                        # Do offsets for animating the walk
                         # 0x0   1x0   2x0
                         #    0x1   1x1   2x1
                         if (object.x > new_x or (object.x == new_x and (object.y % 2) == 1)):
@@ -84,15 +83,22 @@ class Logic():
                         else:
                             object.y_offset -= int(CONSTANTS.TILE_HEIGHT/2)
 
-                        #set the units x y to be square they are walking into
+                        # Set the units x y to be square they are walking into
                         object.x = new_x
                         object.y = new_y
 
-                        #This "action" was completed so remove it from list
+                        # This "action" was completed so remove it from list
                         object.implement_commands_list.pop(0)
-                    
+                
+                elif (command == ACTIONS.TIMEOUT):
+                    keys_to_delete.append(key)
+        
+        # Remove anything we wanted to now that we are done iterating though the dict
+        for key in keys_to_delete:
+            del self.state[key]
+        keys_to_delete.clear()
 
-        #send updated state
+        # Send updated state
         self.broadcast_world()
              
         # Call update_clock again after .1 second

@@ -1,1 +1,9 @@
+#Units
 MOVE = 1
+A_MOVE = 2
+GUARD = 3
+ATTACK = 4
+
+#Projectiles
+TIMEOUT = 5
+COLLISION = 6

@@ -3,6 +3,7 @@ from tkinter import *
 from PIL import Image, ImageTk
 
 import utility.constants as CONSTANTS
+import utility.action_variables as ACTIONS
 import drawable_object
 
 class Projectile(drawable_object.Drawable_Object):
@@ -14,7 +15,7 @@ class Projectile(drawable_object.Drawable_Object):
     def update_self(self, world_logic):
         if (self.lifetime <= 0):
             # TODO - add handling for a projectile timing out
-            return "Timeout" 
+            return (ACTIONS.TIMEOUT, "")
         else:
             self.lifetime -= 1
 
