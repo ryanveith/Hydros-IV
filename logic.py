@@ -113,6 +113,7 @@ class Logic():
         self.state[str(self.increment_id)] = Projectile(
             x = (tile.x - (tile.y % 2)/2) * CONSTANTS.TILE_WIDTH, 
             y = tile.y * CONSTANTS.TILE_HEIGHT, 
+            key = str(self.increment_id), 
             tag = str(self.increment_id), 
             target=target)
         self.increment_id += 1
@@ -121,7 +122,7 @@ class Logic():
         if (tile.occupied != None):
             #Cannot create unit on top of anohter
             return None
-        hero_unit = unit.Unit(tile.x, tile.y, name)
+        hero_unit = unit.Unit(tile.x, tile.y, name, name)
         #spawn_location = next((spot for spot in self.state if spot.x == 0 and spot.y == 0), None) 
         #spawn_location.occupied = unit
         self.state[name] = hero_unit

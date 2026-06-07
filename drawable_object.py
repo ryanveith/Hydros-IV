@@ -4,15 +4,20 @@ from PIL import Image, ImageTk
 import utility.constants as CONSTANTS
 
 class Drawable_Object():
-    def __init__(self, x: int, y: int, tag: str, width: int, height: int, image_file: str):
-        self.tkinter_id = None
+    def __init__(self, x: int, y: int, key: str, tag: str, width: int, height: int, image_file: str):
+        # Tkinter_id of image displayed on canvas (once added)
+        self.tkinter_id: None | int = None
+        # Key for finding this object in the dict that represents world (none is not in world)
+        self.key: None |str = key
         self.tag: str = tag
+        
         self.x: int = x
         self.y: int = y
         self.x_offset: int = 0
         self.y_offset: int = 0
         self.width: int = width
         self.height:int = height
+        
         self.image_file: str = "images/" + image_file
 
     # By default update self should do nothing

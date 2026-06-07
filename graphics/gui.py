@@ -268,13 +268,13 @@ class GUI():
                     if (self.multiselect):
                         if (clicked_unit != None and isinstance(clicked_unit, unit.Unit)):
                             # Append the selected unit to list
-                            self.selected.append( (clicked_unit, drawable_object.Drawable_Object(clicked_unit.x, clicked_unit.y, "halo", CONSTANTS.TILE_WIDTH, int(CONSTANTS.TILE_HEIGHT / 2), "shadow.png")) )
+                            self.selected.append( (clicked_unit, drawable_object.Drawable_Object(clicked_unit.x, clicked_unit.y, None, "halo", CONSTANTS.TILE_WIDTH, int(CONSTANTS.TILE_HEIGHT / 2), "shadow.png")) )
                     else:
                         # Clear images from canvas (since this does not happen during garbage collection)
                         for selected_unit, halo in self.selected:
                             halo.clear_image(self.canvas)
                         if (clicked_unit != None and isinstance(clicked_unit, unit.Unit)):
-                            self.selected = [ (clicked_unit, drawable_object.Drawable_Object(clicked_unit.x, clicked_unit.y, "halo", CONSTANTS.TILE_WIDTH, int(CONSTANTS.TILE_HEIGHT / 2), "shadow.png")) ]
+                            self.selected = [ (clicked_unit, drawable_object.Drawable_Object(clicked_unit.x, clicked_unit.y, None, "halo", CONSTANTS.TILE_WIDTH, int(CONSTANTS.TILE_HEIGHT / 2), "shadow.png")) ]
                         else:
                             self.selected = []
             #Move all selected units to destination

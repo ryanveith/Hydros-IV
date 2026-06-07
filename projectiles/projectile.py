@@ -7,14 +7,16 @@ import utility.action_variables as ACTIONS
 import drawable_object
 
 class Projectile(drawable_object.Drawable_Object):
-    def __init__(self, x: int, y: int, tag: str, target: drawable_object.Drawable_Object):
-        super().__init__(x, y, tag, 50, 50, "O.png")
+    def __init__(self, x: int, y: int, key: str, tag: str, target: drawable_object.Drawable_Object):
+        super().__init__(x, y, key, tag, 50, 50, "O.png")
         self.target: drawable_object.Drawable_Object = target
         self.lifetime: int = 500
+        self.image: None | ImageTk.PhotoImage = None
     
     def update_self(self, world_logic):
         if (self.lifetime <= 0):
             # TODO - add handling for a projectile timing out
+            # Currently it is just deleted from world, and so there is no image to draw since it is self.image for projectiles
             return (ACTIONS.TIMEOUT, "")
         else:
             self.lifetime -= 1
@@ -27,9 +29,9 @@ class Projectile(drawable_object.Drawable_Object):
             
 
             # If already there dont move
-            if (self.x == target_x and self.y == target_y):
+            # if (self.x == target_x and self.y == target_y):
                 # TODO - add collision with unit/target for projectile
-                return
+                # return
             
             # Data for preventing overshooting target
             if (self.x < target_x):
@@ -55,9 +57,11 @@ class Projectile(drawable_object.Drawable_Object):
             if (smaller_x and self.x >= target_x):
                 self.x = target_x
                 self.y = target_y
+                return (ACTIONS.COLLISION, )
             elif ((not smaller_x) and self.x <= target_x):
                 self.x = target_x
                 self.y = target_y
+                return (ACTIONS.COLLISION, "")
 
             # Old code for a projectile that moves a set speed in x and y direction rather then total distance             
             #move in x
@@ -90,7 +94,8 @@ class Projectile(drawable_object.Drawable_Object):
                     tag=self.tag)
             # Prevent image from being garbage collected
             # TODO - Currently should just use self, if they are all individual images
-            image_list[self.tkinter_id] = object_image
+            #image_list[self.tkinter_id] = object_image
+            self.image = object_image
         else:
             # Update Existing Objects
             canvas.coords(
@@ -104,3 +109,4 @@ class Projectile(drawable_object.Drawable_Object):
                 # Prevent image from being garbage collected
                 # TODO - Currently should just use self, if they are all individual images
                 image_list[self.tkinter_id] = object_image
+                self.image = object_image

@@ -5,8 +5,8 @@ import utility.constants as CONSTANTS
 import heapq
 
 class Unit(drawable_object.Drawable_Object):
-    def __init__(self, x: int, y: int, tag: str):
-        super().__init__(x, y, tag, 100, 100, "elfling.png")
+    def __init__(self, x: int, y: int, key: str, tag: str):
+        super().__init__(x, y, key, tag, 100, 100, "elfling.png")
         self.player_commands_list: list[tuple[int, str]] = []
         self.implement_commands_list: list[tuple[int, str]] = []
 
