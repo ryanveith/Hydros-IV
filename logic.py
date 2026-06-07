@@ -17,7 +17,9 @@ class Logic():
         self.playerlist = []
         self.tkinter_mainloop_root = None
         self.time = 0
+
         self.increment_id = 0
+        self.keys_to_delete = []
 
     def set_root(self, root):
         self.tkinter_mainloop_root = root
@@ -41,7 +43,12 @@ class Logic():
         
     def update_world(self):
         self.time = self.time + 1
-        keys_to_delete = []
+
+        # Remove anything we wanted from previous iteration though dict
+        # Reason for waiting until after broadcast is to give time for GUI to update canvas
+        for key in self.keys_to_delete:
+            del self.state[key]
+        self.keys_to_delete.clear()
 
         object: drawable_object.Drawable_Object
         key: str
@@ -91,15 +98,22 @@ class Logic():
                         object.implement_commands_list.pop(0)
                 
                 elif (command == ACTIONS.TIMEOUT):
-                    keys_to_delete.append(key)
-        
-        # Remove anything we wanted to now that we are done iterating though the dict
-        for key in keys_to_delete:
-            del self.state[key]
-        keys_to_delete.clear()
+                    self.keys_to_delete.append(key)
+                elif (command == ACTIONS.COLLISION):
+                    projectile: Projectile = self.state.get(context)
+                    if (projectile != None):
+                        if (type(projectile.target) == unit.Unit and projectile.target.key != None):
+                            projectile.target.health -= projectile.damage
+                            # TODO - experience, which requires a way of tracking participation
+                            
+                            if (projectile.target.health <= 0):
+                                self.keys_to_delete.append(projectile.target.key)
+                                self.state[str(projectile.target.x)+"x"+str(projectile.target.y)].occupied = None
+                    self.keys_to_delete.append(key)
 
         # Send updated state
         self.broadcast_world()
+
              
         # Call update_clock again after .1 second
         self.tkinter_mainloop_root.after(100, self.update_world)  

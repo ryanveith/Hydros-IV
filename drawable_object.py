@@ -17,7 +17,7 @@ class Drawable_Object():
         self.y_offset: int = 0
         self.width: int = width
         self.height:int = height
-        
+
         self.image_file: str = "images/" + image_file
 
     # By default update self should do nothing
@@ -55,4 +55,6 @@ class Drawable_Object():
     # TODO - currently image will not go away on deletion of object but can't use __del__ since object does not know canvas
     # Deleting image from canvas before delting the object works but a better longterm solution would be preffered  
     def clear_image(self, canvas):
+        #This should only get called when no loger a part of the world, so also indicate that this is not being shown on the world
+        self.key = None
         canvas.delete(self.tkinter_id)

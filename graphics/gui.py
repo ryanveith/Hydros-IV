@@ -334,5 +334,7 @@ class GUI():
             
             #Debug
             elif (event.keysym == "Return"):
-                self.world_host.create_projectile(self.world["2x1"], self.world["Giles Corey Hero"])
+                target = self.world.get("Giles Corey Hero")
+                if (target != None):
+                    self.world_host.create_projectile(self.world["2x1"], target)
         

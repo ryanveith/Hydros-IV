@@ -10,6 +10,8 @@ class Unit(drawable_object.Drawable_Object):
         self.player_commands_list: list[tuple[int, str]] = []
         self.implement_commands_list: list[tuple[int, str]] = []
 
+        self.health = 100
+
     def update_self(self, logic):
         # Do Movement Animation (Currenlty just moving entire image in increments)
         ticks_to_move: int = 8
@@ -198,4 +200,11 @@ class Unit(drawable_object.Drawable_Object):
     @staticmethod
     def heuristic(current, goal):
         return abs(current.x - goal.x) + abs(current.y - goal.y)
+    
+    def draw_self(self, zoom, screen_x, screen_y, canvas, mode, image_list):
+        if (self.health <= 0):
+            # Unit death animation
+            self.clear_image(canvas)
+        else:
+            return super().draw_self(zoom, screen_x, screen_y, canvas, mode, image_list)
         

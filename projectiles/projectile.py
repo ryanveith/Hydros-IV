@@ -12,6 +12,9 @@ class Projectile(drawable_object.Drawable_Object):
         self.target: drawable_object.Drawable_Object = target
         self.lifetime: int = 500
         self.image: None | ImageTk.PhotoImage = None
+
+        self.speed: int = 10
+        self.damage: int = 10
     
     def update_self(self, world_logic):
         if (self.lifetime <= 0):
@@ -22,8 +25,6 @@ class Projectile(drawable_object.Drawable_Object):
             self.lifetime -= 1
 
             # Update position
-            speed = 10
-
             target_x: int = ((self.target.x + (self.target.y % 2)/2) * CONSTANTS.TILE_WIDTH) #- self.target.width/2
             target_y: int =  (self.target.y * CONSTANTS.TILE_HEIGHT) - self.target.height/2
             
@@ -47,8 +48,8 @@ class Projectile(drawable_object.Drawable_Object):
             # By default projectiles directly twoards the target
             angle = math.atan2(target_y - self.y, target_x - self.x)
 
-            change_x = speed * math.cos(angle)
-            change_y = speed * math.sin(angle)
+            change_x = self.speed * math.cos(angle)
+            change_y = self.speed * math.sin(angle)
 
             self.x += change_x
             self.y += change_y
@@ -57,11 +58,11 @@ class Projectile(drawable_object.Drawable_Object):
             if (smaller_x and self.x >= target_x):
                 self.x = target_x
                 self.y = target_y
-                return (ACTIONS.COLLISION, )
+                return (ACTIONS.COLLISION, self.key)
             elif ((not smaller_x) and self.x <= target_x):
                 self.x = target_x
                 self.y = target_y
-                return (ACTIONS.COLLISION, "")
+                return (ACTIONS.COLLISION, self.key)
 
             # Old code for a projectile that moves a set speed in x and y direction rather then total distance             
             #move in x
