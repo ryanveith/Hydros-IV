@@ -8,7 +8,7 @@ class Drawable_Object():
         self.tkinter_id = None
         self.tag: str = tag
         self.x: int = x
-        self.y:int = y
+        self.y: int = y
         self.x_offset: int = 0
         self.y_offset: int = 0
         self.width: int = width

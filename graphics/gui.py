@@ -249,6 +249,9 @@ class GUI():
                 self.zoom_in = True
             elif (event.keysym == self.keybindings.zoom_screen_out):
                 self.zoom_out = True
+            # Hold multiselect
+            elif (event.keysym == self.keybindings.multiselect_toggle):
+                self.multiselect = True
             # Unit Select
             elif(event.keysym == self.keybindings.select):
                 # Get square clicked on
@@ -317,6 +320,9 @@ class GUI():
                 self.zoom_in = False
             elif (event.keysym == self.keybindings.zoom_screen_out):
                 self.zoom_out = False
+            # Hold multiselect
+            elif (event.keysym == self.keybindings.multiselect_toggle):
+                self.multiselect = False
             
             #Debug
             elif (event.keysym == "Return"):

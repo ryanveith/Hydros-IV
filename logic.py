@@ -29,11 +29,8 @@ class Logic():
         print(player["name"], " joined")
         self.playerlist.append(player)
         
-        hero_unit = unit.Unit(0, 0, "Hero")
-        #spawn_location = next((spot for spot in self.state if spot.x == 0 and spot.y == 0), None) 
-        #spawn_location.occupied = unit
-        self.state[player["name"]+" Hero"] = hero_unit
-        self.state["0x0"].occupied = hero_unit
+        self.create_unit(self.state["0x0"], player["name"]+" Hero")
+        self.create_unit(self.state["0x1"], "Debug")
 
         #self.broadcast_world()
     
@@ -108,8 +105,18 @@ class Logic():
     def create_projectile(self, tile, target):
         print("Projectile created", tile, target)
         self.state[str(self.increment_id)] = Projectile(
-            x=(tile.x - (tile.y % 2)/2) * CONSTANTS.TILE_WIDTH, 
-            y=tile.y * CONSTANTS.TILE_HEIGHT, 
-            tag=str(self.increment_id), 
+            x = (tile.x - (tile.y % 2)/2) * CONSTANTS.TILE_WIDTH, 
+            y = tile.y * CONSTANTS.TILE_HEIGHT, 
+            tag = str(self.increment_id), 
             target=target)
         self.increment_id += 1
+
+    def create_unit(self, tile: square.Square, name: str):
+        if (tile.occupied != None):
+            #Cannot create unit on top of anohter
+            return None
+        hero_unit = unit.Unit(tile.x, tile.y, name)
+        #spawn_location = next((spot for spot in self.state if spot.x == 0 and spot.y == 0), None) 
+        #spawn_location.occupied = unit
+        self.state[name] = hero_unit
+        tile.occupied = hero_unit

@@ -6,10 +6,10 @@ import utility.constants as CONSTANTS
 import drawable_object
 
 class Projectile(drawable_object.Drawable_Object):
-    def __init__(self, x, y, tag, target):
+    def __init__(self, x: int, y: int, tag: str, target: drawable_object.Drawable_Object):
         super().__init__(x, y, tag, 50, 50, "O.png")
-        self.target = target
-        self.lifetime = 500
+        self.target: drawable_object.Drawable_Object = target
+        self.lifetime: int = 500
     
     def update_self(self, world_logic):
         if (self.lifetime <= 0):
@@ -21,8 +21,8 @@ class Projectile(drawable_object.Drawable_Object):
             # Update position
             speed = 10
 
-            target_x = ((self.target.x + (self.target.y % 2)/2) * CONSTANTS.TILE_WIDTH) #- self.target.width/2
-            target_y =  (self.target.y * CONSTANTS.TILE_HEIGHT) - self.target.height/2
+            target_x: int = ((self.target.x + (self.target.y % 2)/2) * CONSTANTS.TILE_WIDTH) #- self.target.width/2
+            target_y: int =  (self.target.y * CONSTANTS.TILE_HEIGHT) - self.target.height/2
             
 
             # If already there dont move
