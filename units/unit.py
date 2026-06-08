@@ -11,7 +11,10 @@ class Unit(drawable_object.Drawable_Object):
         self.implement_commands_list: list[tuple[int, str]] = []
 
         self.my_images.append(drawable_object.Drawable_Image(0, -self.my_images[0].height, self.my_images[0].width, int(self.my_images[0].height/8), "gray_box.png"))
+        self.my_images.append(drawable_object.Drawable_Image(0, -self.my_images[0].height - 2, self.my_images[0].width - 4, int(self.my_images[0].height/8) - 4, "green.png"))
 
+
+        self.max_health = 100
         self.health = 100
 
     def update_self(self, logic):
@@ -25,6 +28,10 @@ class Unit(drawable_object.Drawable_Object):
             self.y_offset = max(self.y_offset - int (CONSTANTS.TILE_HEIGHT / ticks_to_move), 0)
         elif (self.y_offset < 0):
             self.y_offset = min(self.y_offset + int (CONSTANTS.TILE_HEIGHT / ticks_to_move), 0)
+
+        # Update healthbar
+        if (len(self.my_images) >= 3):
+            self.my_images[2].width = int(self.health/self.max_health * self.my_images[0].width - 4)
 
         # If there is an action to preform return the required data to do that
         # TODO - need to have a movement cooldown rather then use offset

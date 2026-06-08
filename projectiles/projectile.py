@@ -7,8 +7,9 @@ import utility.action_variables as ACTIONS
 import drawable_object
 
 class Projectile(drawable_object.Drawable_Object):
-    def __init__(self, x: int, y: int, key: str, tag: str, target: drawable_object.Drawable_Object):
-        super().__init__(x, y, key, tag, 50, 50, "O.png")
+    def __init__(self, tile_x: int, tile_y: int, key: str, tag: str, target: drawable_object.Drawable_Object):
+        #TODO - Tile_x is misleading since projectiles are not bound to tile system so it is in pixels, but shoudl not loose anythign from drawable so...
+        super().__init__(tile_x, tile_y, key, tag, 50, 50, "O.png")
         self.target: drawable_object.Drawable_Object = target
         self.lifetime: int = 500
         self.image: None | ImageTk.PhotoImage = None
@@ -83,31 +84,33 @@ class Projectile(drawable_object.Drawable_Object):
     # Override draw_self from drawable_object
     # This is needed since this does not stay on the grid system or have a grid space but rather measure xy in pixels
     def draw_self(self, zoom, screen_x, screen_y, canvas, mode, image_list):
-        if (self.tkinter_id == None):
-            # This is a new object that needs to get added
-            # Note that x and y are in pixels not tiles
-            object_image = ImageTk.PhotoImage(Image.open(self.image_file).resize((int(zoom / 100 * self.width), int(zoom / 100 * self.height))))
-            self.tkinter_id = canvas.create_image(
-                    int(zoom / 100 * (self.tile_x + screen_x)), 
-                    int(zoom / 100 * (self.tile_y + screen_y)), 
-                    image=object_image, 
-                    anchor="center",
-                    tag=self.tag)
-            # Prevent image from being garbage collected
-            # TODO - Currently should just use self, if they are all individual images
-            #image_list[self.tkinter_id] = object_image
-            self.image = object_image
-        else:
-            # Update Existing Objects
-            canvas.coords(
-                self.tkinter_id, 
-                int(zoom / 100 * (self.tile_x + screen_x)), 
-                int(zoom / 100 * (self.tile_y + screen_y)))
-            # Zoom images
-            if (mode == "zoom screen"):
-                object_image = ImageTk.PhotoImage(Image.open(self.image_file).resize((int(zoom / 100 * self.width), int(zoom / 100 * self.height))))
-                canvas.itemconfig(self.tkinter_id, image=object_image)
+        for image in self. my_images:
+            if (image.tkinter_id == None):
+                # This is a new object that needs to get added
+                # Note that x and y are in pixels not tiles
+                object_image = ImageTk.PhotoImage(Image.open(image.image_file).resize((int(zoom / 100 * image.width), int(zoom / 100 * image.height))))
+                self.tkinter_id = canvas.create_image(
+                        int(zoom / 100 * (self.tile_x + screen_x + image.x_offset)), 
+                        int(zoom / 100 * (self.tile_y + screen_y + image.y_offset)), 
+                        image=object_image, 
+                        anchor="center",
+                        tag=self.tag)
                 # Prevent image from being garbage collected
                 # TODO - Currently should just use self, if they are all individual images
-                image_list[self.tkinter_id] = object_image
+                #image_list[self.tkinter_id] = object_image
                 self.image = object_image
+            else:
+                # Update Existing Objects
+                canvas.coords(
+                    self.tkinter_id, 
+                    int(zoom / 100 * (self.tile_x + screen_x)), 
+                    int(zoom / 100 * (self.tile_y + screen_y)))
+                # Zoom images
+                if (mode == "zoom screen"):
+                    object_image = ImageTk.PhotoImage(Image.open(self.image_file).resize((int(zoom / 100 * self.width), int(zoom / 100 * self.height))))
+                    canvas.itemconfig(self.tkinter_id, image=object_image)
+                    # Prevent image from being garbage collected
+                    # TODO - Currently should just use self, if they are all individual images
+                    image_list[self.tkinter_id] = object_image
+                    #self.image = object_image
+                    image.image = object_image

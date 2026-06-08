@@ -38,6 +38,8 @@ class GUI():
         self.selected = []
         self.multiselect = False
 
+        self.time = 0
+
         # Python will garbage collect images that tkinter needs to display on canvas
         # So save open images to prevent this 
         # (it might make more sense to have a list of static texture images loaded an only use this for animations but good enough)
@@ -136,7 +138,7 @@ class GUI():
     
     # This should get called only once, an then will keep redrawing GUI
     def clock_Update_draw_world(self):
-        #self.time = self.time + 1 
+        self.time = self.time + 1 
         #print(self.time)
 
         #Do pan/zoom stuff
@@ -155,6 +157,11 @@ class GUI():
             self.zoom_screen("Out", 5)
 
         # Redraw the canvas screen    
+
+        # TODO - remaking all the images takes a noticible amount of time, but is requried for things like zooming or healthbar updates
+        #if (self.time % 100 == 0):
+        #    self.draw_world("zoom screen")
+        #else:    
         self.draw_world("clock update")
 
         # While the world is running keep redrawing it regularly

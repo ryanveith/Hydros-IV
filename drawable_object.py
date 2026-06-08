@@ -38,14 +38,15 @@ class Drawable_Object():
         return None
 
     # Add object to given canvas, otherwise update canvas with objects current positon relative to the screen's position
+    # TODO - mode is ignored because we have to redraw everything anyways so ignore it
     def draw_self(self, zoom, screen_x, screen_y, canvas, mode, image_list):
         for image in self.my_images:
             if (image.tkinter_id == None):
                 # This is a new object that needs to get added
                 object_image = ImageTk.PhotoImage(Image.open(image.image_file).resize((int(zoom / 100 * image.width), int(zoom / 100 * image.height))))
                 image.tkinter_id = canvas.create_image(
-                        int(zoom / 100 * ((self.tile_x + (self.tile_y % 2)/2) * CONSTANTS.TILE_WIDTH + screen_x) + self.x_offset + image.x_offset), 
-                        int(zoom / 100 * (self.tile_y * CONSTANTS.TILE_HEIGHT + screen_y) + self.y_offset + image.y_offset), 
+                        int(zoom / 100 * ((self.tile_x + (self.tile_y % 2)/2) * CONSTANTS.TILE_WIDTH + screen_x + self.x_offset + image.x_offset)), 
+                        int(zoom / 100 * (self.tile_y * CONSTANTS.TILE_HEIGHT + screen_y + self.y_offset + image.y_offset)), 
                         image=object_image, 
                         anchor="s", #"center",
                         tag=self.tag)
@@ -56,8 +57,8 @@ class Drawable_Object():
                 # Update Objects
                 canvas.coords(
                     image.tkinter_id, 
-                    int(zoom / 100 * ((self.tile_x + (self.tile_y % 2)/2) * CONSTANTS.TILE_WIDTH + screen_x) + self.x_offset + image.x_offset), 
-                    int(zoom / 100 * (self.tile_y * CONSTANTS.TILE_HEIGHT + screen_y)) + self.y_offset + image.y_offset)
+                    int(zoom / 100 * ((self.tile_x + (self.tile_y % 2)/2) * CONSTANTS.TILE_WIDTH + screen_x + self.x_offset + image.x_offset)), 
+                    int(zoom / 100 * (self.tile_y * CONSTANTS.TILE_HEIGHT + screen_y + self.y_offset + image.y_offset)))
                 # zoom images
                 if (mode == "zoom screen"):
                     object_image = ImageTk.PhotoImage(Image.open(image.image_file).resize((int(zoom / 100 * image.width), int(zoom / 100 * image.height))))

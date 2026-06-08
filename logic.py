@@ -125,8 +125,8 @@ class Logic():
     def create_projectile(self, tile, target):
         print("Projectile created", tile, target)
         self.state[str(self.increment_id)] = Projectile(
-            x = (tile.x - (tile.y % 2)/2) * CONSTANTS.TILE_WIDTH, 
-            y = tile.y * CONSTANTS.TILE_HEIGHT, 
+            tile_x = (tile.tile_x - (tile.tile_y % 2)/2) * CONSTANTS.TILE_WIDTH, 
+            tile_y = tile.tile_y * CONSTANTS.TILE_HEIGHT, 
             key = str(self.increment_id), 
             tag = str(self.increment_id), 
             target=target)
