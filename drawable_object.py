@@ -4,7 +4,9 @@ from PIL import Image, ImageTk
 import utility.constants as CONSTANTS
 
 class Drawable_Image:
-    def __init__(self, x_offset: int, y_offset: int, width: int, height: int, image_file:str, image: None | Image = None):
+    def __init__(self, x_offset: int, y_offset: int, width: int, height: int, image_file:str, image: None | Image = None, is_image = True):
+        self.is_image = is_image
+
         # Statistics for the image in pixels
         self.x_offset: int = x_offset
         self.y_offset: int = y_offset
@@ -13,7 +15,10 @@ class Drawable_Image:
 
         self.pillow_image: None | Image = image
         # Location of image file in images/ directory
-        self.image_file: str = "images/"+image_file
+        if (is_image):
+            self.image_file: str = "images/"+image_file
+        else:
+            self.image_file: str = image_file
         # Tkinter_id of image displayed on canvas (once added)
         self.tkinter_id: None | int = None
 
@@ -45,25 +50,54 @@ class Drawable_Object():
         for image in self.my_images:
             if (image.tkinter_id == None):
                 # This is a new object that needs to get added
-                if (tkinter_image_list.get(image.image_file) == None):
-                    # (Image, Original Width, Original Height)
-                    tkinter_image_list[image.image_file] = (ImageTk.PhotoImage(Image.open(image.image_file).resize( (int(zoom / 100 * image.width), int(zoom / 100 * image.height)) )), image.width, image.height)
-                    
-                image.tkinter_id = canvas.create_image(
-                        int(zoom / 100 * ((self.tile_x + (self.tile_y % 2)/2) * CONSTANTS.TILE_WIDTH + screen_x + self.x_offset + image.x_offset)), 
-                        int(zoom / 100 * (self.tile_y * CONSTANTS.TILE_HEIGHT + screen_y + self.y_offset + image.y_offset)), 
-                        image = tkinter_image_list[image.image_file][0], 
-                        anchor = "s", #"center",
-                        tag = self.tag)
+
+                if (image.is_image == True):
+                    # Create a normal image
+                    if (tkinter_image_list.get(image.image_file) == None):
+                        # Add image to list if this is the first time we are doing this image
+                        # (Image, Original Width, Original Height)
+                        tkinter_image_list[image.image_file] = (ImageTk.PhotoImage(Image.open(image.image_file).resize( (int(zoom / 100 * image.width), int(zoom / 100 * image.height)) )), image.width, image.height)
+                        
+                    image.tkinter_id = canvas.create_image(
+                            int(zoom / 100 * ((self.tile_x + (self.tile_y % 2)/2) * CONSTANTS.TILE_WIDTH + screen_x + self.x_offset + image.x_offset)), 
+                            int(zoom / 100 * (self.tile_y * CONSTANTS.TILE_HEIGHT + screen_y + self.y_offset + image.y_offset)), 
+                            image = tkinter_image_list[image.image_file][0], 
+                            anchor = "s", #"center",
+                            tags = self.tag)
+                else:
+                    x = int(zoom / 100 * ((self.tile_x + (self.tile_y % 2)/2) * CONSTANTS.TILE_WIDTH + screen_x + self.x_offset + image.x_offset))
+                    y = int(zoom / 100 * (self.tile_y * CONSTANTS.TILE_HEIGHT + screen_y + self.y_offset + image.y_offset))
+                            
+                    image.tkinter_id = canvas.create_rectangle(
+                        int(x - image.width/2),
+                        int(y - image.height/2),
+                        int(x + image.width/2), 
+                        int(y + image.height/2), 
+                        fill = image.image_file,
+                        tags = self.tag)
+
             else:
                 # Update Objects
-                canvas.coords(
-                    image.tkinter_id, 
-                    int(zoom / 100 * ((self.tile_x + (self.tile_y % 2)/2) * CONSTANTS.TILE_WIDTH + screen_x + self.x_offset + image.x_offset)), 
-                    int(zoom / 100 * (self.tile_y * CONSTANTS.TILE_HEIGHT + screen_y + self.y_offset + image.y_offset)))
-                # zoom images
-                if (mode == "zoom screen"):
-                    canvas.itemconfig(image.tkinter_id, image = tkinter_image_list[image.image_file][0])
+                if (image.is_image == True):
+                    canvas.coords(
+                        image.tkinter_id, 
+                        int(zoom / 100 * ((self.tile_x + (self.tile_y % 2)/2) * CONSTANTS.TILE_WIDTH + screen_x + self.x_offset + image.x_offset)), 
+                        int(zoom / 100 * (self.tile_y * CONSTANTS.TILE_HEIGHT + screen_y + self.y_offset + image.y_offset)))
+                    # zoom images
+                    if (mode == "zoom screen"):
+                        canvas.itemconfig(image.tkinter_id, image = tkinter_image_list[image.image_file][0])
+                else:
+                    #updating rectangles differenlty
+                    x = int(zoom / 100 * ((self.tile_x + (self.tile_y % 2)/2) * CONSTANTS.TILE_WIDTH + screen_x + self.x_offset + image.x_offset))
+                    y = int(zoom / 100 * (self.tile_y * CONSTANTS.TILE_HEIGHT + screen_y + self.y_offset + image.y_offset))
+                    canvas.coords(
+                        image.tkinter_id, 
+                        int(x - image.width/2),
+                        int(y - image.height/2),
+                        int(x + image.width/2),
+                        int(y + image.height/2)
+                    ) 
+                        
 
     # TODO - currently image will not go away on deletion of object but can't use __del__ since object does not know canvas
     # Deleting image from canvas before delting the object works but a better longterm solution would be preffered  

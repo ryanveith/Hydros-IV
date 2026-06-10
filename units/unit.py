@@ -10,9 +10,10 @@ class Unit(drawable_object.Drawable_Object):
         self.player_commands_list: list[tuple[int, str]] = []
         self.implement_commands_list: list[tuple[int, str]] = []
 
-        self.my_images.append(drawable_object.Drawable_Image(0, -self.my_images[0].height, self.my_images[0].width, int(self.my_images[0].height/8), "gray_box.png"))
-        self.my_images.append(drawable_object.Drawable_Image(0, -self.my_images[0].height - 2, self.my_images[0].width - 4, int(self.my_images[0].height/8) - 4, "green.png"))
-
+        # Healthbar should be rectangles so it can change size without extra 
+        self.my_images.append(drawable_object.Drawable_Image(0, -self.my_images[0].height, self.my_images[0].width, int(self.my_images[0].height/8), "gray", is_image = False ))
+        self.my_images.append(drawable_object.Drawable_Image(0, -self.my_images[0].height, self.my_images[0].width - 4, int(self.my_images[0].height/8) - 4, "green", is_image = False ))
+    
 
         self.max_health = 100
         self.health = 100

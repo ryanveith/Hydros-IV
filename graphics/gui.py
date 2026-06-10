@@ -163,11 +163,10 @@ class GUI():
         # Redraw the canvas screen    
 
         # TODO - remaking all the images takes a noticible amount of time, but is requried for things like zooming or healthbar updates
-        #if (self.time % 100 == 0):
-        #    self.draw_world("zoom screen")
-        #else:    
-        #self.draw_world("clock update")
-        self.draw_world("zoom screen")
+        if (self.time % 10 == 0):
+            self.draw_world("zoom screen")
+        else:    
+            self.draw_world("clock update")
 
         # While the world is running keep redrawing it regularly
         # Instead of just redwaring it when the world updates
@@ -180,7 +179,9 @@ class GUI():
         if (mode == "zoom screen"): 
             # If we are zooming the screen zoom all images in use
             for file_path, (tkinter_image, width, height) in self.photo_image_list.items():
-                self.photo_image_list[file_path] = (ImageTk.PhotoImage(Image.open(file_path).resize((int(self.zoom / 100 * width), int(self.zoom / 100 * height)))), width, height)
+                # Image can be none, and will for rectangles which will not have a viable file path
+                if (tkinter_image != None):
+                    self.photo_image_list[file_path] = (ImageTk.PhotoImage(Image.open(file_path).resize((int(self.zoom / 100 * width), int(self.zoom / 100 * height)))), width, height)
 
         # Everything we are drawing should be a child of Drawable_Object
         # Therefore just call draw_self on them
