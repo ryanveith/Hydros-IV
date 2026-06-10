@@ -12,8 +12,7 @@ class Projectile(drawable_object.Drawable_Object):
         super().__init__(tile_x, tile_y, key, tag, 50, 50, "O.png")
         self.target: drawable_object.Drawable_Object = target
         self.lifetime: int = 500
-        self.image: None | ImageTk.PhotoImage = None
-
+        
         self.speed: int = 10
         self.damage: int = 10
     
@@ -28,12 +27,6 @@ class Projectile(drawable_object.Drawable_Object):
             # Update position
             target_x: int = ((self.target.tile_x + (self.target.tile_y % 2)/2) * CONSTANTS.TILE_WIDTH)
             target_y: int =  (self.target.tile_y * CONSTANTS.TILE_HEIGHT) - self.target.my_images[0].height/2
-            
-
-            # If already there dont move
-            # if (self.x == target_x and self.y == target_y):
-                # TODO - add collision with unit/target for projectile
-                # return
             
             # Data for preventing overshooting target
             if (self.tile_x < target_x):
@@ -65,52 +58,30 @@ class Projectile(drawable_object.Drawable_Object):
                 self.tile_y = target_y
                 return (ACTIONS.COLLISION, self.key)
 
-            # Old code for a projectile that moves a set speed in x and y direction rather then total distance             
-            #move in x
-            #if (target_x > self.x + speed):
-            #    self.x += speed
-            #elif (target_x < self.x - speed):
-            #    self.x -= speed
-            #else:
-            #    self.x = target_x
-            #move in y
-            #if (target_y > self.y + speed):
-            #    self.y += speed
-            #elif (target_y < self.y - speed):
-            #    self.y -= speed
-            #else:
-            #    self.y = target_y
-
     # Override draw_self from drawable_object
     # This is needed since this does not stay on the grid system or have a grid space but rather measure xy in pixels
-    def draw_self(self, zoom, screen_x, screen_y, canvas, mode, image_list):
-        for image in self. my_images:
+    def draw_self(self, zoom, screen_x, screen_y, canvas, mode, tkinter_image_list):
+        for image in self.my_images:
             if (image.tkinter_id == None):
                 # This is a new object that needs to get added
                 # Note that x and y are in pixels not tiles
-                object_image = ImageTk.PhotoImage(Image.open(image.image_file).resize((int(zoom / 100 * image.width), int(zoom / 100 * image.height))))
-                self.tkinter_id = canvas.create_image(
+                if (tkinter_image_list.get(image.image_file) == None):
+                    # (Image, Original Width, Original Height)
+                    tkinter_image_list[image.image_file] = (ImageTk.PhotoImage(Image.open(image.image_file).resize( (int(zoom / 100 * image.width), int(zoom / 100 * image.height)) )), image.width, image.height)
+                
+                image.tkinter_id = canvas.create_image(
                         int(zoom / 100 * (self.tile_x + screen_x + image.x_offset)), 
                         int(zoom / 100 * (self.tile_y + screen_y + image.y_offset)), 
-                        image=object_image, 
-                        anchor="center",
-                        tag=self.tag)
-                # Prevent image from being garbage collected
-                # TODO - Currently should just use self, if they are all individual images
-                #image_list[self.tkinter_id] = object_image
-                self.image = object_image
+                        image = tkinter_image_list[image.image_file][0], 
+                        anchor = "center",
+                        tag = self.tag)
             else:
                 # Update Existing Objects
                 canvas.coords(
-                    self.tkinter_id, 
+                    image.tkinter_id, 
                     int(zoom / 100 * (self.tile_x + screen_x)), 
                     int(zoom / 100 * (self.tile_y + screen_y)))
                 # Zoom images
                 if (mode == "zoom screen"):
-                    object_image = ImageTk.PhotoImage(Image.open(self.image_file).resize((int(zoom / 100 * self.width), int(zoom / 100 * self.height))))
-                    canvas.itemconfig(self.tkinter_id, image=object_image)
-                    # Prevent image from being garbage collected
-                    # TODO - Currently should just use self, if they are all individual images
-                    image_list[self.tkinter_id] = object_image
-                    #self.image = object_image
-                    image.image = object_image
+                    canvas.itemconfig(image.tkinter_id, image = tkinter_image_list[image.image_file][0])
+                

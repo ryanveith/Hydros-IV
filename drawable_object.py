@@ -4,12 +4,14 @@ from PIL import Image, ImageTk
 import utility.constants as CONSTANTS
 
 class Drawable_Image:
-    def __init__(self, x_offset: int, y_offset: int, width: int, height: int, image_file:str):
+    def __init__(self, x_offset: int, y_offset: int, width: int, height: int, image_file:str, image: None | Image = None):
         # Statistics for the image in pixels
         self.x_offset: int = x_offset
         self.y_offset: int = y_offset
         self.width: int = width
         self.height: int = height
+
+        self.pillow_image: None | Image = image
         # Location of image file in images/ directory
         self.image_file: str = "images/"+image_file
         # Tkinter_id of image displayed on canvas (once added)
@@ -39,20 +41,20 @@ class Drawable_Object():
 
     # Add object to given canvas, otherwise update canvas with objects current positon relative to the screen's position
     # TODO - mode is ignored because we have to redraw everything anyways so ignore it
-    def draw_self(self, zoom, screen_x, screen_y, canvas, mode, image_list):
+    def draw_self(self, zoom, screen_x, screen_y, canvas, mode, tkinter_image_list):
         for image in self.my_images:
             if (image.tkinter_id == None):
                 # This is a new object that needs to get added
-                object_image = ImageTk.PhotoImage(Image.open(image.image_file).resize((int(zoom / 100 * image.width), int(zoom / 100 * image.height))))
+                if (tkinter_image_list.get(image.image_file) == None):
+                    # (Image, Original Width, Original Height)
+                    tkinter_image_list[image.image_file] = (ImageTk.PhotoImage(Image.open(image.image_file).resize( (int(zoom / 100 * image.width), int(zoom / 100 * image.height)) )), image.width, image.height)
+                    
                 image.tkinter_id = canvas.create_image(
                         int(zoom / 100 * ((self.tile_x + (self.tile_y % 2)/2) * CONSTANTS.TILE_WIDTH + screen_x + self.x_offset + image.x_offset)), 
                         int(zoom / 100 * (self.tile_y * CONSTANTS.TILE_HEIGHT + screen_y + self.y_offset + image.y_offset)), 
-                        image=object_image, 
-                        anchor="s", #"center",
-                        tag=self.tag)
-                # prevent image from being garbage collected
-                # TODO - Currently should just use self, if they are all individual images
-                image_list[image.tkinter_id] = object_image
+                        image = tkinter_image_list[image.image_file][0], 
+                        anchor = "s", #"center",
+                        tag = self.tag)
             else:
                 # Update Objects
                 canvas.coords(
@@ -61,11 +63,7 @@ class Drawable_Object():
                     int(zoom / 100 * (self.tile_y * CONSTANTS.TILE_HEIGHT + screen_y + self.y_offset + image.y_offset)))
                 # zoom images
                 if (mode == "zoom screen"):
-                    object_image = ImageTk.PhotoImage(Image.open(image.image_file).resize((int(zoom / 100 * image.width), int(zoom / 100 * image.height))))
-                    canvas.itemconfig(image.tkinter_id, image=object_image)
-                    # prevent image from being garbage collected
-                    # TODO - Currently should just use self, if they are all individual images
-                    image_list[image.tkinter_id] = object_image
+                    canvas.itemconfig(image.tkinter_id, image = tkinter_image_list[image.image_file][0])
 
     # TODO - currently image will not go away on deletion of object but can't use __del__ since object does not know canvas
     # Deleting image from canvas before delting the object works but a better longterm solution would be preffered  

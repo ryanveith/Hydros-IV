@@ -43,7 +43,9 @@ class GUI():
         # Python will garbage collect images that tkinter needs to display on canvas
         # So save open images to prevent this 
         # (it might make more sense to have a list of static texture images loaded an only use this for animations but good enough)
-        self.image_list = {}
+        self.photo_image_list = {}
+
+        self.pillow_image_list = {}
 
         self.state = 0
 
@@ -144,17 +146,19 @@ class GUI():
         #Do pan/zoom stuff
         if (self.panning):
             if (self.pan_up):
-                self.pan_screen("Up", 1)
+                self.pan_screen("Up", 2)
             if (self.pan_down):
-                self.pan_screen("Down", 1)
+                self.pan_screen("Down", 2)
             if (self.pan_right):
-                self.pan_screen("Right", 1)
+                self.pan_screen("Right", 2)
             if (self.pan_left):
-                self.pan_screen("Left", 1)
+                self.pan_screen("Left", 2)
         if (self.zoom_in):
-            self.zoom_screen("In", 5)
+            self.zoom = min(self.zoom + 2, 300)
+            #self.zoom_screen("In", 5)
         elif (self.zoom_out):
-            self.zoom_screen("Out", 5)
+            self.zoom = max(self.zoom - 2, 50)
+            #self.zoom_screen("Out", 5)
 
         # Redraw the canvas screen    
 
@@ -162,7 +166,8 @@ class GUI():
         #if (self.time % 100 == 0):
         #    self.draw_world("zoom screen")
         #else:    
-        self.draw_world("clock update")
+        #self.draw_world("clock update")
+        self.draw_world("zoom screen")
 
         # While the world is running keep redrawing it regularly
         # Instead of just redwaring it when the world updates
@@ -172,11 +177,16 @@ class GUI():
             self.root.after(10, self.clock_Update_draw_world)
 
     def draw_world(self, mode):
+        if (mode == "zoom screen"): 
+            # If we are zooming the screen zoom all images in use
+            for file_path, (tkinter_image, width, height) in self.photo_image_list.items():
+                self.photo_image_list[file_path] = (ImageTk.PhotoImage(Image.open(file_path).resize((int(self.zoom / 100 * width), int(self.zoom / 100 * height)))), width, height)
+
         # Everything we are drawing should be a child of Drawable_Object
         # Therefore just call draw_self on them
         object_to_draw: drawable_object.Drawable_Object
         for object_to_draw in self.world.values():
-            object_to_draw.draw_self(self.zoom, self.screen_x, self.screen_y, self.canvas, mode, self.image_list)
+            object_to_draw.draw_self(self.zoom, self.screen_x, self.screen_y, self.canvas, mode, self.photo_image_list)
 
         #Draw halos for everything that is selected?
         #Halos should be a drawable object or extension/child of it though
@@ -185,7 +195,7 @@ class GUI():
             for unit, halo in self.selected:
                 halo.tile_x = unit.tile_x
                 halo.tile_y = unit.tile_y
-                halo.draw_self(self.zoom, self.screen_x, self.screen_y, self.canvas, mode, self.image_list)
+                halo.draw_self(self.zoom, self.screen_x, self.screen_y, self.canvas, mode, self.photo_image_list)
    
             
     def pan_screen(self, direction, amount):
