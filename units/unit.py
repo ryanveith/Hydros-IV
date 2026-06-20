@@ -10,7 +10,7 @@ class Unit(drawable_object.Drawable_Object):
         self.player_commands_list: list[tuple[int, str]] = []
         self.implement_commands_list: list[tuple[int, str]] = []
         
-        self.name = "bob"
+        self.name = key
 
         # Healthbar should be rectangles so it can change size without extra 
         self.my_images.append(drawable_object.Drawable_Image(0, -self.my_images[0].height, self.my_images[0].width, int(self.my_images[0].height/8), "gray", drawable_type = 1))

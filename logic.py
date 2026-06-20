@@ -123,7 +123,6 @@ class Logic():
         return self.state
     
     def create_projectile(self, tile, target):
-        print("Projectile created", tile, target)
         self.state[str(self.increment_id)] = Projectile(
             tile_x = (tile.tile_x - (tile.tile_y % 2)/2) * CONSTANTS.TILE_WIDTH, 
             tile_y = tile.tile_y * CONSTANTS.TILE_HEIGHT, 

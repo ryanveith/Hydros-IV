@@ -23,10 +23,9 @@ class Drawable_Image:
         self.tkinter_id: None | int = None
 
 class Drawable_Object():
-    def __init__(self, tile_x: int, tile_y: int, key: str, tag: str, width: int, height: int, image_file: str):
-        
+    def __init__(self, tile_x: int, tile_y: int, key: str, tag: str, width: int, height: int, image_file: str, drawable_type = 0):
         # There should always be 1 image in the list at 0, 0 with correct width and height so other images can be based of those values 
-        self.my_images = [Drawable_Image(0, 0, width, height, image_file)]
+        self.my_images = [Drawable_Image(0, 0, width, height, image_file, drawable_type=drawable_type)]
         
     
         # Key for finding this object in the dict that represents world (none is not in world)

@@ -6,6 +6,7 @@ import drawable_object
 from graphics import keybinds
 from units import unit
 import drawable_object
+import menu_screen
 import terrain.square as square
 import utility.constants as CONSTANTS
 import utility.action_variables as ACTIONS
@@ -14,6 +15,8 @@ class GUI():
     def __init__(self, world_logic):
         # Variables for World
         self.world = {}
+        self.menu = []
+        
         self.is_host = True
         self.world_host = None
         if self.is_host:
@@ -72,19 +75,14 @@ class GUI():
         self.canvas_width = screen_width - 10
         self.canvas_height = screen_height - 10
         # create canvas
-        self.canvas = Canvas(self.root, bg="green", width=self.canvas_width, height=self.canvas_height, relief="groove", borderwidth=2)
+        self.canvas = Canvas(self.root, bg="green", width=self.canvas_width, height=self.canvas_height, relief = "groove", borderwidth = 2)
         # display in root
         self.canvas.pack(fill="both", expand=True)
 
+
         #TODO - create home/main menu
-        #main_menu = Frame(self.root, width=self.canvas_width, height=self.canvas_height, relief="groove", borderwidth=2)
-        ##main_menu.grid(row=0, column=0)
-        #main_menu.rowconfigure(0, weight=1)
-        #main_menu.columnconfigure(0, weight=1)
-        #Stuff to show in home
-        #self.menu_label = Label(main_menu, text="Testing")
-        #self.menu_label.pack(expand=True, fill="both")
-        #.tkraise() or .lift() to choose which one is in front
+        self.menu.append(menu_screen.Menu_Screen(int(self.canvas_width/2), int(self.canvas_height/2), 400, 400, "blue", text = "Testing - only interaction is enter key"))
+        
 
 
         #User Interaction
@@ -103,6 +101,8 @@ class GUI():
         # This is requred since using same root for logic as host's tkinter mainloop
         world_logic.set_root(self.root)
 
+        # Draw everything since even in loop nonthing will update based on time until clock_update_draw_world() is called when joining
+        self.draw_world("none")
         # Execute Tkinter Mainloop
         self.root.mainloop()
 
@@ -122,6 +122,13 @@ class GUI():
         if (self.state == 0):
             if (self.is_host == True):
                 self.world_host.join({"name": self.name, "root": self.root})
+                # Clear the main menu stuff from menu and then populate it with other stuff like resource bars
+                menu_item: menu_screen.Menu_Screen
+                for menu_item in self.menu:
+                    menu_item.clear_image(self.canvas)
+                self.menu = []
+                # TODO resource bars or any other default menu type things that show in game
+
                 # Start updating canvas based on world
                 # self.state should be expanded so this can be simplified
                 self.state = 1
@@ -141,8 +148,7 @@ class GUI():
     # This should get called only once, an then will keep redrawing GUI
     def clock_Update_draw_world(self):
         self.time = self.time + 1 
-        #print(self.time)
-
+        
         #Do pan/zoom stuff
         if (self.panning):
             if (self.pan_up):
@@ -189,15 +195,22 @@ class GUI():
         for object_to_draw in self.world.values():
             object_to_draw.draw_self(self.zoom, self.screen_x, self.screen_y, self.canvas, mode, self.photo_image_list)
 
-        #Draw halos for everything that is selected?
-        #Halos should be a drawable object or extension/child of it though
+        # Draw halos for everything that is selected?
+        # Halos should be a drawable object or extension/child of it though
         if (self.selected != None):
             unit: drawable_object.Drawable_Object
             for unit, halo in self.selected:
                 halo.tile_x = unit.tile_x
                 halo.tile_y = unit.tile_y
                 halo.draw_self(self.zoom, self.screen_x, self.screen_y, self.canvas, mode, self.photo_image_list)
-   
+
+        # Draw menu items last so by default they are drawn over the top of things
+        # This does not quite work since unit can be created after menu and then would be on top so use tkinter.raise
+        object_to_draw: drawable_object.Drawable_Object
+        for object_to_draw in self.menu:
+            object_to_draw.draw_self(self.zoom, self.screen_x, self.screen_y, self.canvas, mode, self.photo_image_list)
+        self.canvas.tag_raise("menu")
+        
             
     def pan_screen(self, direction, amount):
         if (direction == "Up"):
@@ -245,6 +258,8 @@ class GUI():
     def key_pressed(self, event):
         # Currently only way of interacting with main menu is releasing enter key
         if (self.state == 0):
+            # In main menu there is no main loop so interacing with it needs to call draw world to display any changes
+            self.draw_world("none")
             return
         else:
             # First there should be a check that a gui element is not been clicked
