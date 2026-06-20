@@ -43,7 +43,7 @@ class GUI():
         # Python will garbage collect images that tkinter needs to display on canvas
         # So save open images to prevent this 
         # (it might make more sense to have a list of static texture images loaded an only use this for animations but good enough)
-        self.photo_image_list = {}
+        self.photo_image_list: dict[str, ImageTk.PhotoImage] = {}
 
         self.pillow_image_list = {}
 
