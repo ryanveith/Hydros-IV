@@ -4,8 +4,14 @@ from PIL import Image, ImageTk
 
 class Menu_Screen(drawable_object.Drawable_Object):
     #tile_x: int, tile_y: int, key: str, tag: str, width: int, height: int, image_file: str, drawable_type = 0):
-    def __init__(self, x:int, y: int, width: int, height: int, color: str, text: str = "", image_file: str = ""):
+    def __init__(
+            self, x:int, y: int, width: int, height: int, 
+            color: str, text: str = "", image_file: str = "", 
+            handle_click = lambda self, click_x, click_y: False):
+        
         super().__init__(x, y, "", "menu", width, height, color, drawable_type = 1)
+        self.handle_click = handle_click
+    
         if (image_file != ""):
             self.my_images.append(drawable_object.Drawable_Image(0, 0, 100, 100, image_file))
         if (text != ""):
@@ -52,6 +58,4 @@ class Menu_Screen(drawable_object.Drawable_Object):
                 # Update Objects (or not since no animaiton)
                 pass
 
-    # Menu will need a way to be clicked on, this might not be how I want to finally implement that though
-    def handle_click():
-        pass
+    

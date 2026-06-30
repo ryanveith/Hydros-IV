@@ -80,8 +80,21 @@ class GUI():
         self.canvas.pack(fill="both", expand=True)
 
 
-        #TODO - create home/main menu
-        self.menu.append(menu_screen.Menu_Screen(int(self.canvas_width/2), int(self.canvas_height/2), 400, 400, "blue", text = "Testing - only interaction is enter key"))
+        # TODO - create home/main menu
+        # Lambda has to have the class passed into it so it uses menu_screen rather then where it is createed
+        self.menu.append(
+            menu_screen.Menu_Screen(
+                int(self.canvas_width/2), int(self.canvas_height/2), 
+                400, 400, "blue", 
+                text = "Testing - only interaction is enter key", 
+                handle_click = lambda self, click_x, click_y: 
+                True if (
+                    click_x > self.tile_x - self.my_images[0].width and 
+                    click_x < self.tile_x + self.my_images[0].width and 
+                    click_x > self.tile_y - self.my_images[0].width and 
+                    click_x < self.tile_y + self.my_images[0].height)
+                else
+                False))
         
 
 
@@ -249,6 +262,14 @@ class GUI():
         x = round(x/CONSTANTS.TILE_WIDTH - (y % 2)/2)
         return (int(x), int(y))
 
+    def handle_menu_click(self, event):
+        # Iterate though all menu screens on click to deterimne if they are clicked and if so hanlde it
+        for screen in self.menu:
+            did_something = screen.handle_click(self = screen, click_x = event.x, click_y = event.y)
+            if did_something:
+                print(screen)
+
+
     # Button events do not have a keysym so add one and then let key_pressed handle it
     def button_pressed(self, event):
         event.keysym = "mouse_"+str(event.num)
@@ -260,6 +281,7 @@ class GUI():
         if (self.state == 0):
             # In main menu there is no main loop so interacing with it needs to call draw world to display any changes
             self.draw_world("none")
+            self.handle_menu_click(event)
             return
         else:
             # First there should be a check that a gui element is not been clicked
