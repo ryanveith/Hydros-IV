@@ -16,6 +16,14 @@ class Menu_Screen(drawable_object.Drawable_Object):
             self.my_images.append(drawable_object.Drawable_Image(0, 0, 100, 100, image_file))
         if (text != ""):
             self.my_images.append(drawable_object.Drawable_Image(0, 0, 100, 100, text, drawable_type = 2))
+
+    def _get_menu_photo(self, image: drawable_object.Drawable_Image) -> ImageTk.PhotoImage:
+        # Screen-space menus must keep a stable PhotoImage. The shared world cache is
+        # replaced every few ticks on "zoom screen", which GCs any canvas ref that isn't updated.
+        if getattr(image, "_menu_photo", None) is None:
+            image._menu_photo = ImageTk.PhotoImage(
+                Image.open(image.image_file).resize((image.width, image.height)))
+        return image._menu_photo
     
     # Override  draw as menu should be unbound to grid, and also not resize like non GUI components
     # Add object to given canvas - currenlty do not need to update since no animated menu items
@@ -25,17 +33,13 @@ class Menu_Screen(drawable_object.Drawable_Object):
                 # This is a new object that needs to get added
 
                 if (image.type == 0):
-                    # Create a normal image
-                    if (tkinter_image_list.get(image.image_file) == None):
-                        # Add image to list if this is the first time we are doing this image
-                        # (Image, Original Width, Original Height)
-                        tkinter_image_list[image.image_file] = (ImageTk.PhotoImage(Image.open(image.image_file).resize( (zoom / 100 * image.width, zoom / 100 * image.height) )), image.width, image.height)
-                        
+                    # Create a normal image (stable photo, centered to match type-1 background)
+                    photo = self._get_menu_photo(image)
                     image.tkinter_id = canvas.create_image(
                             self.tile_x + image.x_offset,
                             self.tile_y + image.y_offset,
-                            image = tkinter_image_list[image.image_file][0], 
-                            anchor = "s", #"center",
+                            image = photo, 
+                            anchor = "center",
                             tags = self.tag)
                 elif (image.type == 1):
                     x = self.tile_x
@@ -55,7 +59,11 @@ class Menu_Screen(drawable_object.Drawable_Object):
                             text = image.image_file,
                             tags = self.tag)
             else:
-                # Update Objects (or not since no animaiton)
-                pass
-
-    
+                # Keep menu images bound to stable PhotoImage across world zoom cache rebuilds
+                if (image.type == 0):
+                    photo = self._get_menu_photo(image)
+                    canvas.itemconfig(image.tkinter_id, image=photo)
+                    canvas.coords(
+                        image.tkinter_id,
+                        self.tile_x + image.x_offset,
+                        self.tile_y + image.y_offset)

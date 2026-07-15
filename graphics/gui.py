@@ -16,6 +16,7 @@ class GUI():
         # Variables for World
         self.world = {}
         self.menu = []
+        self.open_inventory = None
         
         self.is_host = True
         self.world_host = None
@@ -264,11 +265,31 @@ class GUI():
 
     def handle_menu_click(self, event):
         # Iterate though all menu screens on click to deterimne if they are clicked and if so hanlde it
+        # Returns True if any menu consumed the click
         for screen in self.menu:
             did_something = screen.handle_click(self = screen, click_x = event.x, click_y = event.y)
             if did_something:
                 print(screen)
+                return True
+        return False
 
+    def close_inventory(self):
+        if self.open_inventory is None:
+            return
+        self.open_inventory.clear_image(self.canvas)
+        for image in self.open_inventory.my_images:
+            image.tkinter_id = None
+        if self.open_inventory in self.menu:
+            self.menu.remove(self.open_inventory)
+        self.open_inventory = None
+
+    def open_unit_inventory(self, selected_unit: unit.Unit):
+        self.close_inventory()
+        inventory = selected_unit.inventory
+        inventory.tile_x = int(self.canvas_width / 2)
+        inventory.tile_y = int(self.canvas_height / 2)
+        self.menu.append(inventory)
+        self.open_inventory = inventory
 
     # Button events do not have a keysym so add one and then let key_pressed handle it
     def button_pressed(self, event):
@@ -309,8 +330,37 @@ class GUI():
             # Hold multiselect
             elif (event.keysym == self.keybindings.multiselect_toggle):
                 self.multiselect = True
+            # Toggle inventory: close if open, else open first selected unit's inventory
+            elif (event.keysym == self.keybindings.toggle_inventory or event.keysym.lower() == self.keybindings.toggle_inventory):
+                if self.open_inventory is not None:
+                    self.close_inventory()
+                elif len(self.selected) > 0:
+                    self.open_unit_inventory(self.selected[0][0])
+            # Pickup first ground item on the selected unit's tile
+            elif (event.keysym == self.keybindings.pickup_item or event.keysym.lower() == self.keybindings.pickup_item):
+                if len(self.selected) > 0:
+                    selected_unit: unit.Unit = self.selected[0][0]
+                    tile: square.Square = self.world.get(str(selected_unit.tile_x)+"x"+str(selected_unit.tile_y))
+                    if (tile is not None and len(tile.resources) > 0 and None in selected_unit.inventory.items):
+                        item = tile.resources.pop(0)
+                        item.clear_image(self.canvas)
+                        for image in item.my_images:
+                            image.tkinter_id = None
+                        selected_unit.inventory.add_item(item)
+            # Drop selected inventory item onto the selected unit's tile
+            elif (event.keysym == self.keybindings.drop_item or event.keysym.lower() == self.keybindings.drop_item):
+                if len(self.selected) > 0:
+                    selected_unit: unit.Unit = self.selected[0][0]
+                    tile: square.Square = self.world.get(str(selected_unit.tile_x)+"x"+str(selected_unit.tile_y))
+                    if tile is not None:
+                        item = selected_unit.inventory.remove_item()
+                        if item is not None:
+                            self.world_host.place_ground_item(tile, item)
             # Unit Select
             elif(event.keysym == self.keybindings.select):
+                # Prefer menu clicks (e.g. inventory) over world selection
+                if len(self.menu) > 0 and self.handle_menu_click(event):
+                    return
                 # Get square clicked on
                 square_clicked_x, square_clicked_y = self.get_grid_square(event.x, event.y)
                 # Check square exists
