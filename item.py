@@ -1,8 +1,9 @@
 import drawable_object
+import utility.constants as CONSTANTS
 
 
 class Item(drawable_object.Drawable_Object):
-    def __init__(self, item_width: int, item_height: int, image_file: str = "O.png", name: str = ""):
+    def __init__(self, item_width: int = CONSTANTS.TILE_HEIGHT, item_height: int = CONSTANTS.TILE_HEIGHT, image_file: str = "O.png", name: str = ""):
         super().__init__(0, 0, name, "item", item_width, item_height, image_file)
         self.item_width = item_width
         self.item_height = item_height
@@ -19,6 +20,6 @@ class Item(drawable_object.Drawable_Object):
             source.width,
             source.height,
             image_file,
-            image=source.pillow_image,
-            drawable_type=source.type,
+            image = source.pillow_image,
+            drawable_type = source.type,
         )

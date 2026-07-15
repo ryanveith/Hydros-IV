@@ -6,10 +6,10 @@ from item import Item
 class Inventory(menu_screen.Menu_Screen):
     def __init__(
             self,
-            x: int,
-            y: int,
             cols: int,
             rows: int,
+            x: int = 0,
+            y: int = 0,
             color: str = "gray",
             slot_size: int = 50):
         panel_width = cols * slot_size
@@ -20,6 +20,7 @@ class Inventory(menu_screen.Menu_Screen):
         self.rows = rows
         self.slot_size = slot_size
         self.items: list[Item | None] = [None] * (cols * rows)
+        self.items[0] = Item()
         self.selected_index: int | None = None
         # Background + gray_box slots; item icons appended after this index
         self._slot_image_end = 1 + cols * rows

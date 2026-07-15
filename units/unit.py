@@ -21,7 +21,7 @@ class Unit(drawable_object.Drawable_Object):
         self.max_health = 100
         self.health = 100
 
-        self.inventory = Inventory(0, 0, 1, 1)
+        self.inventory = Inventory(3, 3)
 
     def update_self(self, logic):
         # Do Movement Animation (Currenlty just moving entire image in increments)
