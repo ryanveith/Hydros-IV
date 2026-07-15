@@ -336,6 +336,26 @@ class GUI():
                     self.close_inventory()
                 elif len(self.selected) > 0:
                     self.open_unit_inventory(self.selected[0][0])
+            # Pickup first ground item on the selected unit's tile
+            elif (event.keysym == self.keybindings.pickup_item or event.keysym.lower() == self.keybindings.pickup_item):
+                if len(self.selected) > 0:
+                    selected_unit: unit.Unit = self.selected[0][0]
+                    tile: square.Square = self.world.get(str(selected_unit.tile_x)+"x"+str(selected_unit.tile_y))
+                    if (tile is not None and len(tile.resources) > 0 and None in selected_unit.inventory.items):
+                        item = tile.resources.pop(0)
+                        item.clear_image(self.canvas)
+                        for image in item.my_images:
+                            image.tkinter_id = None
+                        selected_unit.inventory.add_item(item)
+            # Drop selected inventory item onto the selected unit's tile
+            elif (event.keysym == self.keybindings.drop_item or event.keysym.lower() == self.keybindings.drop_item):
+                if len(self.selected) > 0:
+                    selected_unit: unit.Unit = self.selected[0][0]
+                    tile: square.Square = self.world.get(str(selected_unit.tile_x)+"x"+str(selected_unit.tile_y))
+                    if tile is not None:
+                        item = selected_unit.inventory.remove_item()
+                        if item is not None:
+                            self.world_host.place_ground_item(tile, item)
             # Unit Select
             elif(event.keysym == self.keybindings.select):
                 # Prefer menu clicks (e.g. inventory) over world selection

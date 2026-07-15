@@ -79,6 +79,20 @@ class Inventory(menu_screen.Menu_Screen):
         self._refresh_item_images()
         return True
 
+    def remove_item(self, index: int | None = None) -> Item | None:
+        if index is None:
+            index = self.selected_index
+        if index is None or index < 0 or index >= len(self.items):
+            return None
+        item = self.items[index]
+        if item is None:
+            return None
+        self.items[index] = None
+        if self.selected_index == index:
+            self.selected_index = None
+        self._refresh_item_images()
+        return item
+
     def handle_click(self, click_x: int, click_y: int) -> bool:
         index = self._slot_index(click_x, click_y)
         if index is None:

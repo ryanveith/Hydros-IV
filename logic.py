@@ -4,6 +4,7 @@ import terrain.square as square
 import units.unit as unit
 from projectiles.projectile import Projectile
 import utility.action_variables as ACTIONS
+from item import Item
 
 import json
 
@@ -21,11 +22,20 @@ class Logic():
         self.increment_id = 0
         self.keys_to_delete = []
 
+        self.place_ground_item(self.state["1x1"], Item())
+
     def set_root(self, root):
         self.tkinter_mainloop_root = root
 
         # Logic needs to have a clock and should probably jut use the self.root.after on the GUI of host
         self.update_world()
+
+    def place_ground_item(self, tile: square.Square, item: Item):
+        item.tile_x = tile.tile_x
+        item.tile_y = tile.tile_y
+        for image in item.my_images:
+            image.tkinter_id = None
+        tile.resources.append(item)
 
     def join(self, player):
         print(player["name"], " joined")

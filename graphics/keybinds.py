@@ -11,6 +11,8 @@ class Keybinds():
         # trial for inventory
         self.interact = "mouse_1"
         self.toggle_inventory = "e"
+        self.pickup_item = "p"
+        self.drop_item = "d"
 
         # selection
         self.select = "mouse_1"
