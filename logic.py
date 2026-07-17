@@ -4,7 +4,9 @@ import terrain.square as square
 import units.unit as unit
 from projectiles.projectile import Projectile
 import utility.action_variables as ACTIONS
-from item import Item
+from items.item import Item
+
+import items.item_constructors
 
 import json
 
@@ -22,7 +24,7 @@ class Logic():
         self.increment_id = 0
         self.keys_to_delete = []
 
-        self.place_ground_item(self.state["1x1"], Item())
+        self.place_ground_item(self.state["1x1"], items.item_constructors.create_item_pebble())
 
     def set_root(self, root):
         self.tkinter_mainloop_root = root

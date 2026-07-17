@@ -6,7 +6,7 @@ import drawable_object
 from graphics import keybinds
 from units import unit
 import drawable_object
-import menu_screen
+import menus.menu_screen as menu_screen
 import terrain.square as square
 import utility.constants as CONSTANTS
 import utility.action_variables as ACTIONS

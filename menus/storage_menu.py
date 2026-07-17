@@ -1,26 +1,26 @@
 import drawable_object
-import menu_screen
-from item import Item
+import menus.menu_screen as menu_screen
+from items.item import Item
+import items.item_constructors
 
-
-class Inventory(menu_screen.Menu_Screen):
+class Storage_Menu(menu_screen.Menu_Screen):
     def __init__(
             self,
             cols: int,
             rows: int,
             x: int = 0,
             y: int = 0,
-            color: str = "gray",
+            color: str = "dark slate gray",
             slot_size: int = 50):
-        panel_width = cols * slot_size
-        panel_height = rows * slot_size
+        panel_width = cols * slot_size + 10
+        panel_height = rows * slot_size + 10
         super().__init__(x, y, panel_width, panel_height, color)
 
         self.cols = cols
         self.rows = rows
         self.slot_size = slot_size
         self.items: list[Item | None] = [None] * (cols * rows)
-        self.items[0] = Item()
+        # self.items[0] = items.item_constructors.create_item_pebble()
         self.selected_index: int | None = None
         # Background + gray_box slots; item icons appended after this index
         self._slot_image_end = 1 + cols * rows
@@ -29,11 +29,11 @@ class Inventory(menu_screen.Menu_Screen):
             x_offset, y_offset = self._slot_offset(i)
             self.my_images.append(
                 drawable_object.Drawable_Image(
-                    x_offset, y_offset, slot_size, slot_size, "gray_box.png"))
+                    x_offset, y_offset, slot_size, slot_size, "inventory/inventory_slot_32.png"))
 
         self._refresh_item_images()
         # Unbound so GUI can call handle_click(self=screen, click_x=..., click_y=...)
-        self.handle_click = Inventory.handle_click
+        self.handle_click = Storage_Menu.handle_click
 
     def _slot_offset(self, index: int) -> tuple[int, int]:
         col = index % self.cols
