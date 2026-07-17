@@ -3,6 +3,8 @@ import menus.menu_screen as menu_screen
 from items.item import Item
 import items.item_constructors
 
+import math
+
 class Storage_Menu(menu_screen.Menu_Screen):
     def __init__(
             self,
@@ -12,6 +14,8 @@ class Storage_Menu(menu_screen.Menu_Screen):
             y: int = 0,
             color: str = "dark slate gray",
             slot_size: int = 50):
+        self.cols = cols
+        self.rows = rows
         panel_width = cols * slot_size + 10
         panel_height = rows * slot_size + 10
         super().__init__(x, y, panel_width, panel_height, color)
@@ -67,12 +71,42 @@ class Storage_Menu(menu_screen.Menu_Screen):
                 x_offset, y_offset = self._slot_offset(i)
                 self.my_images.append(item.get_display_image(x_offset, y_offset))
 
+    def _item_fits_in_slot(self,  item_width: int, item_height: int, slot_index: int):
+        print("test ", item_width, item_height, slot_index)
+        index_row = int(slot_index / self.rows)
+        index_col = slot_index % self.rows
+        print("slot: "+str(slot_index)+" row: "+str(index_row)+" col: "+str(index_col))
+        for row in range(item_width):
+            for col in range(item_height):
+                print("make it here")
+                slot = slot_index + row * self.rows + col
+                print("slot: ", int(slot))
+                print("good?", row + index_row > self.rows, col + index_col > self.cols)
+                if (
+                    row + index_row > self.rows or
+                    col + index_col > self.cols or
+                    self.items[slot] != None):
+                    return False
+        return True
+
     def add_item(self, item: Item, index: int | None = None) -> bool:
         if index is None:
-            try:
-                index = self.items.index(None)
-            except ValueError:
-                return False
+            for slot_index, slot in enumerate(self.items):
+                if (slot == None):
+                    #if (item.item_width == 1 and item.item_height == 1):
+                    #    self.items[slot] = item
+                    #    self._refresh_item_images()
+                    #    return True
+                    item_fits = self._item_fits_in_slot(item_width = item.item_slot_width, item_height = item.item_slot_height, slot_index = slot_index)
+                    if (item_fits):
+                        self.items[slot_index] = item
+                        self._refresh_item_images()
+                        return True
+            return False
+            #try:
+            #    index = self.items.index(None)
+            #except ValueError:
+            #    return False
         if index < 0 or index >= len(self.items) or self.items[index] is not None:
             return False
         self.items[index] = item

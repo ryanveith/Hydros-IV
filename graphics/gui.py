@@ -342,11 +342,11 @@ class GUI():
                     selected_unit: unit.Unit = self.selected[0][0]
                     tile: square.Square = self.world.get(str(selected_unit.tile_x)+"x"+str(selected_unit.tile_y))
                     if (tile is not None and len(tile.resources) > 0 and None in selected_unit.inventory.items):
-                        item = tile.resources.pop(0)
-                        item.clear_image(self.canvas)
-                        for image in item.my_images:
-                            image.tkinter_id = None
-                        selected_unit.inventory.add_item(item)
+                        if (selected_unit.inventory.add_item(tile.resources[-1])):
+                            item = tile.resources.pop(0)
+                            item.clear_image(self.canvas)
+                            for image in item.my_images:
+                                image.tkinter_id = None
             # Drop selected inventory item onto the selected unit's tile
             elif (event.keysym == self.keybindings.drop_item or event.keysym.lower() == self.keybindings.drop_item):
                 if len(self.selected) > 0:
