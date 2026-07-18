@@ -25,7 +25,7 @@ class Menu_Screen(drawable_object.Drawable_Object):
                 Image.open(image.image_file).resize((image.width, image.height)))
         return image._menu_photo
     
-    # Override  draw as menu should be unbound to grid, and also not resize like non GUI components
+    # Override draw as menu should be unbound to grid, and also not resize like non GUI components
     # Add object to given canvas - currenlty do not need to update since no animated menu items
     def draw_self(self, zoom: int, screen_x: int, screen_y: int, canvas: Canvas, mode: str, tkinter_image_list: dict[str, ImageTk.PhotoImage]):
         for image in self.my_images:
@@ -62,7 +62,7 @@ class Menu_Screen(drawable_object.Drawable_Object):
                 # Keep menu images bound to stable PhotoImage across world zoom cache rebuilds
                 if (image.type == 0):
                     photo = self._get_menu_photo(image)
-                    canvas.itemconfig(image.tkinter_id, image=photo)
+                    canvas.itemconfig(image.tkinter_id, image = photo)
                     canvas.coords(
                         image.tkinter_id,
                         self.tile_x + image.x_offset,

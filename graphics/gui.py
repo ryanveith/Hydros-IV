@@ -342,7 +342,7 @@ class GUI():
                     selected_unit: unit.Unit = self.selected[0][0]
                     tile: square.Square = self.world.get(str(selected_unit.tile_x)+"x"+str(selected_unit.tile_y))
                     if (tile is not None and len(tile.resources) > 0 and None in selected_unit.inventory.items):
-                        if (selected_unit.inventory.add_item(tile.resources[-1])):
+                        if (selected_unit.inventory.add_item(tile.resources[0])):
                             item = tile.resources.pop(0)
                             item.clear_image(self.canvas)
                             for image in item.my_images:
@@ -356,6 +356,11 @@ class GUI():
                         item = selected_unit.inventory.remove_item()
                         if item is not None:
                             self.world_host.place_ground_item(tile, item)
+                        # the above is about tile.resources.append(item)
+                        # this does need to end up as a call that changes would state though like movement
+                        # so this should all be a drop item call to logic
+                    else:
+                        raise Exception("No tile to drop item to, and you may not drop items in the void")
             # Unit Select
             elif(event.keysym == self.keybindings.select):
                 # Prefer menu clicks (e.g. inventory) over world selection
