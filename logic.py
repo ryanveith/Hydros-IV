@@ -25,6 +25,8 @@ class Logic():
         self.keys_to_delete = []
 
         self.place_ground_item(self.state["1x1"], items.item_constructors.create_item_pebble())
+        self.place_ground_item(self.state["1x2"], items.item_constructors.create_item_stick())
+        self.place_ground_item(self.state["2x1"], items.item_constructors.create_item_gold_ore())
 
     def set_root(self, root):
         self.tkinter_mainloop_root = root

@@ -14,6 +14,9 @@ class Storage_Menu(menu_screen.Menu_Screen):
             y: int = 0,
             color: str = "dark slate gray",
             slot_size: int = 50):
+        self.selected_item: Item | None = None
+        self.selected_index: int | None = None
+
         self.cols = cols
         self.rows = rows
         panel_width = cols * slot_size + 10
@@ -66,6 +69,8 @@ class Storage_Menu(menu_screen.Menu_Screen):
     def _refresh_item_images(self):
         # Keep background + gray boxes; rebuild item icon layers
         self.my_images = self.my_images[: self._slot_image_end]
+        i: int
+        item: Item
         for i, item in enumerate(self.items):
             if item is not None:
                 x_offset, y_offset = self._slot_offset(i)
@@ -88,6 +93,11 @@ class Storage_Menu(menu_screen.Menu_Screen):
                     self.items[slot] != None):
                     return False
         return True
+    
+    def _set_slot_to_item(self,  item_width: int, item_height: int, slot_index: int, item: Item | None):
+        for row in range(item_width):
+            for col in range(item_height):
+                self.items[slot_index + row * self.rows + col] = item
 
     def add_item(self, item: Item, index: int | None = None) -> bool:
         if index is None:
@@ -99,7 +109,8 @@ class Storage_Menu(menu_screen.Menu_Screen):
                     #    return True
                     item_fits = self._item_fits_in_slot(item_width = item.item_slot_width, item_height = item.item_slot_height, slot_index = slot_index)
                     if (item_fits):
-                        self.items[slot_index] = item
+                        #self.items[slot_index] = item
+                        self._set_slot_to_item(item_width = item.item_slot_width, item_height = item.item_slot_height, slot_index = slot_index, item = item)
                         self._refresh_item_images()
                         return True
             return False
@@ -107,9 +118,21 @@ class Storage_Menu(menu_screen.Menu_Screen):
             #    index = self.items.index(None)
             #except ValueError:
             #    return False
-        if index < 0 or index >= len(self.items) or self.items[index] is not None:
+        if index < 0 or index >= len(self.items) or self._item_fits_in_slot(
+            item_width = item.item_slot_width, 
+            item_height = item.item_slot_height,
+            slot_index = index) is not None:
+            # Only the index < 0 check should be needed since item fits in slot can handle overflow
+            # TODO make item fits in slot funciton handle all invalid input by returning false
             return False
-        self.items[index] = item
+        # Add item there
+        #self.items[index] = item
+        self._set_slot_to_item(
+            item_width = item.item_slot_width, 
+            item_height = item.item_slot_height,
+            slot_index = index,
+            item = item
+        )
         self._refresh_item_images()
         return True
 
@@ -128,22 +151,60 @@ class Storage_Menu(menu_screen.Menu_Screen):
         return item
 
     def handle_click(self, click_x: int, click_y: int) -> bool:
+        # If not withing inventory clear selection and return
         index = self._slot_index(click_x, click_y)
         if index is None:
+            # TODO "put" item back so you can have item follow mouse and not actually be in a spot while moving
+            self.selected_item = None
+            self.selected_index = None
             return False
 
-        if self.selected_index is None:
+        print("here")
+        if (self.selected_item is None or self.selected_index is None):
+            print("selecting", self.selected_item, self.selected_index)
             if self.items[index] is not None:
                 self.selected_index = index
-        elif self.selected_index == index:
-            self.selected_index = None
-        else:
-            # Move into empty slot or swap with occupied slot
-            self.items[self.selected_index], self.items[index] = (
-                self.items[index],
-                self.items[self.selected_index],
-            )
-            self.selected_index = None
-            self._refresh_item_images()
+                self.selected_item = self.items[index]
+                print("selected")
 
+        elif self.selected_index == index:
+            # TODO, this is a temproary case that will become a normal put item there once you can actualy pick up item temporaily
+            self.selected_index = None
+            self.selected_item = self.items[index]
+
+        else:
+            print("test +++ ",self.selected_item.item_slot_width, self.selected_item.item_slot_height)
+            if self._item_fits_in_slot(
+                    item_width = self.selected_item.item_slot_width, 
+                    item_height = self.selected_item.item_slot_height,
+                    slot_index = index):
+                # Clear old spot
+                self._set_slot_to_item(
+                    item_width = self.selected_item.item_slot_width, 
+                    item_height = self.selected_item.item_slot_height,
+                    slot_index = self.selected_index,
+                    item = None)
+                # Put in new spot
+                self._set_slot_to_item(
+                    item_width = self.selected_item.item_slot_width, 
+                    item_height = self.selected_item.item_slot_height,
+                    slot_index = index,
+                    item = self.selected_item)
+                # Clear selected Item
+                self.selected_index = None
+                self.slected_item = None
+            else:
+                # Currently do not have the logic to figure out if a another item is big enough to swap with 
+                # TODO, implement that
+                pass
+        
+        #else:
+        #    # Move into empty slot or swap with occupied slot
+        #    self.items[self.selected_index], self.items[index] = (
+        #        self.items[index],
+        #        self.items[self.selected_index],
+        #    )
+        #    self.selected_index = None
+        
+        self._refresh_item_images()
         return True
