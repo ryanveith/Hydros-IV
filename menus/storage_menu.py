@@ -54,11 +54,14 @@ class Storage_Menu(menu_screen.Menu_Screen):
         self.handle_click = Storage_Menu.handle_click
 
     # Given a index, return the x and y offset required for the drawable object that is that slot
-    def _slot_offset(self, index: int) -> tuple[int, int]:
+    def _slot_offset(self, index: int, item_width: int = 1, item_height: int = 1) -> tuple[int, int]:
         col = index % self.num_cols
         row = index // self.num_cols
         x_offset = int((col - (self.num_cols - 1) / 2) * self.slot_size)
         y_offset = int((row - (self.num_rows - 1) / 2) * self.slot_size)
+        # Modify offset based on item size to allow for bigger items
+        x_offset = int(x_offset + self.slot_size * (item_width - 1)/2)
+        y_offset = int(y_offset + self.slot_size * (item_height - 1)/2)
         return x_offset, y_offset
 
     # Given an x, y cordinate on the screen return the array location of that spot in inventory
@@ -89,8 +92,11 @@ class Storage_Menu(menu_screen.Menu_Screen):
         item: Item
         for i, item in enumerate(self.items):
             if item is not None:
-                x_offset, y_offset = self._slot_offset(i)
-                self.my_images.append(item.get_display_image(x_offset, y_offset))
+                part_of_row = (i - 1 >= 0 and self.items[i - 1] == item)
+                part_of_col = (i - self.num_cols >= 0 and self.items[i - self.num_cols] == item)
+                if ((not part_of_row) and (not part_of_col)):
+                    x_offset, y_offset = self._slot_offset(i, item_width = item.item_slot_width, item_height = item.item_slot_height)
+                    self.my_images.append(item.get_display_image(x_offset, y_offset))
 
     # Given a index in inventory and a width and height of slots to check from it return if all checked slots are empty
     def _item_fits_in_slot(self, item_width: int, item_height: int, slot_index: int):

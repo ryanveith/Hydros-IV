@@ -20,8 +20,8 @@ class Item(drawable_object.Drawable_Object):
         return drawable_object.Drawable_Image(
             x_offset,
             y_offset,
-            source.width,
-            source.height,
+            self.item_slot_width*source.width,
+            self.item_slot_height*source.height,
             image_file,
             image = source.pillow_image,
             drawable_type = source.type,
