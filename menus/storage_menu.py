@@ -247,7 +247,7 @@ class Storage_Menu(menu_screen.Menu_Screen):
             else:
                 # Currently do not have the logic to figure out if a another item is big enough to swap with 
                 # TODO, implement that
-                pass
+                self._select(None)
         
         #else:
         #    # Move into empty slot or swap with occupied slot
