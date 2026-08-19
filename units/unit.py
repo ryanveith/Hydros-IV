@@ -2,6 +2,8 @@ import drawable_object
 import utility.action_variables as ACTIONS
 import utility.constants as CONSTANTS
 from menus.storage_menu import Storage_Menu
+from menus.equipment_menu import Equipment_Menu
+from menus.multi_menu import Multi_Menu
 
 import heapq
 
@@ -21,7 +23,7 @@ class Unit(drawable_object.Drawable_Object):
         self.max_health = 100
         self.health = 100
 
-        self.inventory = Storage_Menu(3, 3)
+        self.inventory = Multi_Menu(Storage_Menu(3, 3), Equipment_Menu())
 
     def update_self(self, logic):
         # Do Movement Animation (Currenlty just moving entire image in increments)
