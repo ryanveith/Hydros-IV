@@ -64,17 +64,22 @@ class Storage_Menu(menu_screen.Menu_Screen):
         y_offset = int(y_offset + self.slot_size * (item_height - 1)/2)
         return x_offset, y_offset
 
+    def _click_in_panel(self, click_x: int, click_y: int) -> bool:
+        half_w = self.my_images[0].width / 2
+        half_h = self.my_images[0].height / 2
+        return (
+            self.tile_x - half_w <= click_x <= self.tile_x + half_w
+            and self.tile_y - half_h <= click_y <= self.tile_y + half_h
+        )
+
     # Given an x, y cordinate on the screen return the array location of that spot in inventory
     # If x, y is not in inventory return None
     def _slot_index(self, click_x: int, click_y: int) -> int | None:
-        half_w = self.my_images[0].width / 2
-        half_h = self.my_images[0].height / 2
-        if not (
-            self.tile_x - half_w <= click_x <= self.tile_x + half_w
-            and self.tile_y - half_h <= click_y <= self.tile_y + half_h
-        ):
+        if not self._click_in_panel(click_x, click_y):
             return None
 
+        half_w = self.my_images[0].width / 2
+        half_h = self.my_images[0].height / 2
         local_x = click_x - (self.tile_x - half_w)
         local_y = click_y - (self.tile_y - half_h)
         col = int(local_x // self.slot_size)
@@ -150,10 +155,10 @@ class Storage_Menu(menu_screen.Menu_Screen):
                         return True
             # Item did not fit in any spot so return false to mark that this was unsucessfuls
             return False
-        if index < 0 or index >= len(self.items) or self._item_fits_in_slot(
+        if index < 0 or index >= len(self.items) or not self._item_fits_in_slot(
             item_width = item.item_slot_width, 
             item_height = item.item_slot_height,
-            slot_index = index) is not None:
+            slot_index = index):
             # Only the index < 0 check should be needed since item fits in slot can handle overflow
             # TODO make item fits in slot funciton handle all invalid input by returning false
             return False
@@ -213,49 +218,48 @@ class Storage_Menu(menu_screen.Menu_Screen):
                     self.my_images[(self.selected_index + col * self.num_rows + row) + 1]._menu_photo = ImageTk.PhotoImage(Image.open("images/inventory/blue_inventory_slot_32.png").resize((self.slot_size, self.slot_size)))
         self._refresh_item_images()
 
-    # Handle clicks within inventory, reutrns False if click was not in invenotry
-    # Otherwise handle moving items around and whatnot
-    def handle_click(self, click_x: int, click_y: int, click_type = "interact") -> bool:
-        # If click not within inventory clear selection and return
+    # Handle clicks within inventory.
+    # Returns (consumed, selected_item, empty_index).
+    # incoming_item is an item selected in another menu, used for cross-menu transfer.
+    def handle_click(
+            self,
+            click_x: int,
+            click_y: int,
+            click_type="interact",
+            incoming_item: Item | None = None
+            ) -> tuple[bool, Item | None, int | None]:
+        if not self._click_in_panel(click_x, click_y):
+            return (False, self.selected_item, None)
+
         index = self._slot_index(click_x, click_y)
         if index is None:
-            self._select(None)
-            return False
+            return (True, self.selected_item, None)
 
-        # Handle normal click
-
-        # If no selected select clicked item
-        if (self.selected_item is None or self.selected_index is None):
-            if self.items[index] is not None:
-                self._select(index)
-        # If clicked selected item unselect
-        elif self.selected_index == index:
-            self._select(None)
-        # Else move selected item to clicked spot if free
-        else:
-            # Check spot free
-            if self._item_fits_in_slot(
-                    item_width = self.selected_item.item_slot_width, 
-                    item_height = self.selected_item.item_slot_height,
-                    slot_index = index):
-                # Clear item from old spot
-                self._set_slot_to_item(slot_index = self.selected_index, item = None)
-                # Put item in new spot
-                self._set_slot_to_item(slot_index = index, item = self.selected_item)
-                # Clear selected Item
+        # Same-menu select / deselect / move when this menu already has a selection
+        if self.selected_item is not None and self.selected_index is not None:
+            if self.selected_index == index:
+                self._select(None)
+            elif self._item_fits_in_slot(
+                    item_width=self.selected_item.item_slot_width,
+                    item_height=self.selected_item.item_slot_height,
+                    slot_index=index):
+                self._set_slot_to_item(slot_index=self.selected_index, item=None)
+                self._set_slot_to_item(slot_index=index, item=self.selected_item)
                 self._select(index)
             else:
-                # Currently do not have the logic to figure out if a another item is big enough to swap with 
+                # Currently do not have the logic to figure out if a another item is big enough to swap with
                 # TODO, implement that
                 self._select(None)
-        
-        #else:
-        #    # Move into empty slot or swap with occupied slot
-        #    self.items[self.selected_index], self.items[index] = (
-        #        self.items[index],
-        #        self.items[self.selected_index],
-        #    )
-        #    self.selected_index = None
+            self._refresh_item_images()
+            return (True, self.selected_item, None)
+
+        if self.items[index] is not None:
+            self._select(index)
+            self._refresh_item_images()
+            return (True, self.selected_item, None)
+
+        if incoming_item is not None:
+            return (True, None, index)
 
         self._refresh_item_images()
-        return True
+        return (True, None, None)
