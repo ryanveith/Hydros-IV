@@ -144,6 +144,7 @@ class Unit(drawable_object.Drawable_Object):
                 self.current_tile = current_tile
                 self.path = path
                 self.path_cost = path_cost
+                # The following code gets the adjacent tiles
                 # From 0,0 can go to right to 0,1 and 0,-1 and left to -1,1, and -1,-1
                 # But if you are on
                 # 0,1 you can go right to 1,0 and 1,2 and left to 0,0 and 0,2
@@ -160,6 +161,7 @@ class Unit(drawable_object.Drawable_Object):
                     down_right = world.get(str(current_tile.tile_x+1)+"x"+str(current_tile.tile_y-1))
                 self.connected_tiles = [up_left, down_left, up_right, down_right]
                 self.connected_tiles: list[drawable_object.Drawable_Object] = filter((lambda tile: tile != None), self.connected_tiles)
+                
                 self.connected_tiles: list[drawable_object.Drawable_Object] = filter((lambda tile: tile.occupied == None), self.connected_tiles)
 
             def expand(self):
