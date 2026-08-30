@@ -26,7 +26,9 @@ class Projectile(drawable_object.Drawable_Object):
 
             # Update position
             target_x: int = ((self.target.tile_x + (self.target.tile_y % 2)/2) * CONSTANTS.TILE_WIDTH)
-            target_y: int =  (self.target.tile_y * CONSTANTS.TILE_HEIGHT) - self.target.my_images[0].height/2
+            # Units keep a ground shadow at my_images[0]; aim at the body sprite
+            body_height = self.target.my_images[1].height if hasattr(self.target, "shadow_image") else self.target.my_images[0].height
+            target_y: int =  (self.target.tile_y * CONSTANTS.TILE_HEIGHT) - body_height/2
             
             # Data for preventing overshooting target
             if (self.tile_x < target_x):

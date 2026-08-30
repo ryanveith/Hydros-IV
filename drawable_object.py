@@ -2,9 +2,10 @@ from tkinter import *
 from PIL import Image, ImageTk
 
 import utility.constants as CONSTANTS
+from utility.shadow_tint import get_shadow_cache_key, load_tinted_shadow
 
 class Drawable_Image:
-    def __init__(self, x_offset: int, y_offset: int, width: int, height: int, image_file:str, image: None | Image = None, drawable_type = 0):
+    def __init__(self, x_offset: int, y_offset: int, width: int, height: int, image_file:str, image: None | Image = None, drawable_type = 0, tint_color: str | None = None):
         self.type = drawable_type
 
         # Statistics for the image in pixels
@@ -14,6 +15,7 @@ class Drawable_Image:
         self.height: int = height
 
         self.pillow_image: None | Image = image
+        self.tint_color: str | None = tint_color
         # Location of image file in images/ directory
         if (self.type == 0):
             self.image_file: str = "images/"+image_file
@@ -52,15 +54,20 @@ class Drawable_Object():
 
                 if (image.type == 0):
                     # Create a normal image
-                    if (tkinter_image_list.get(image.image_file) == None):
+                    cache_key = get_shadow_cache_key(image.image_file, image.tint_color)
+                    if (tkinter_image_list.get(cache_key) == None):
                         # Add image to list if this is the first time we are doing this image
                         # (Image, Original Width, Original Height)
-                        tkinter_image_list[image.image_file] = (ImageTk.PhotoImage(Image.open(image.image_file).resize( (int(zoom / 100 * image.width), int(zoom / 100 * image.height)) )), image.width, image.height)
+                        if image.tint_color is not None:
+                            photo = load_tinted_shadow(image.image_file, image.tint_color, image.width, image.height, zoom)
+                        else:
+                            photo = ImageTk.PhotoImage(Image.open(image.image_file).resize( (int(zoom / 100 * image.width), int(zoom / 100 * image.height)) ))
+                        tkinter_image_list[cache_key] = (photo, image.width, image.height)
                         
                     image.tkinter_id = canvas.create_image(
                             int(zoom / 100 * ((self.tile_x + (self.tile_y % 2)/2) * CONSTANTS.TILE_WIDTH + screen_x + self.x_offset + image.x_offset)), 
                             int(zoom / 100 * (self.tile_y * CONSTANTS.TILE_HEIGHT + screen_y + self.y_offset + image.y_offset)), 
-                            image = tkinter_image_list[image.image_file][0], 
+                            image = tkinter_image_list[cache_key][0], 
                             anchor = "s", #"center",
                             tags = self.tag)
                 elif (image.type == 1):
@@ -111,7 +118,8 @@ class Drawable_Object():
                         int(zoom / 100 * (self.tile_y * CONSTANTS.TILE_HEIGHT + screen_y + self.y_offset + image.y_offset)))
                     # zoom images
                     if (image.type == 0 and mode == "zoom screen"):
-                        canvas.itemconfig(image.tkinter_id, image = tkinter_image_list[image.image_file][0])
+                        cache_key = get_shadow_cache_key(image.image_file, image.tint_color)
+                        canvas.itemconfig(image.tkinter_id, image = tkinter_image_list[cache_key][0])
     
                         
 

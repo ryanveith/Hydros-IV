@@ -15,11 +15,21 @@ class Unit(drawable_object.Drawable_Object):
         self.implement_commands_list: list[tuple[int, str]] = []
         
         self.name = key
+        self.team = None
+
+        # Ground shadow drawn under the sprite (tint set when joining a team)
+        self.my_images.insert(0, drawable_object.Drawable_Image(
+            0, -int(CONSTANTS.TILE_HEIGHT / 4),
+            int(CONSTANTS.TILE_WIDTH * 3/4), int(CONSTANTS.TILE_HEIGHT / 2),
+            "shadow.png",
+        ))
+        self.shadow_image = self.my_images[0]
+        sprite = self.my_images[1]
 
         # Healthbar should be rectangles so it can change size without extra 
-        self.my_images.append(drawable_object.Drawable_Image(0, -self.my_images[0].height, self.my_images[0].width, int(self.my_images[0].height/8), "gray", drawable_type = 1))
-        self.my_images.append(drawable_object.Drawable_Image(0, -self.my_images[0].height, self.my_images[0].width - 4, int(self.my_images[0].height/8) - 4, "green", drawable_type = 1))
-        self.my_images.append(drawable_object.Drawable_Image(0, -self.my_images[0].height, self.my_images[0].width - 4, int(self.my_images[0].height/8) - 4, self.name, drawable_type = 2))
+        self.my_images.append(drawable_object.Drawable_Image(0, -sprite.height, sprite.width, int(sprite.height/8), "gray", drawable_type = 1))
+        self.my_images.append(drawable_object.Drawable_Image(0, -sprite.height, sprite.width - 4, int(sprite.height/8) - 4, "green", drawable_type = 1))
+        self.my_images.append(drawable_object.Drawable_Image(0, -sprite.height, sprite.width - 4, int(sprite.height/8) - 4, self.name, drawable_type = 2))
         
         self.max_health = 100
         self.health = 100
@@ -38,9 +48,9 @@ class Unit(drawable_object.Drawable_Object):
         elif (self.y_offset < 0):
             self.y_offset = min(self.y_offset + int (CONSTANTS.TILE_HEIGHT / ticks_to_move), 0)
 
-        # Update healthbar
-        if (len(self.my_images) >= 3):
-            self.my_images[2].width = int(self.health/self.max_health * self.my_images[0].width - 4)
+        # Update healthbar (indices: 0=shadow, 1=sprite, 2=gray, 3=green, 4=name)
+        if (len(self.my_images) >= 4):
+            self.my_images[3].width = int(self.health/self.max_health * self.my_images[1].width - 4)
 
         # If there is an action to preform return the required data to do that
         # TODO - need to have a movement cooldown rather then use offset
@@ -100,6 +110,8 @@ class Unit(drawable_object.Drawable_Object):
         if target is None or not isinstance(target, Unit):
             return False
         if target.key == self.key or target.health <= 0:
+            return False
+        if target.team is not None and self.team is not None and target.team is self.team:
             return False
         if self.has_bow_equipped():
             return self.tile_distance_to(target) <= CONSTANTS.BOW_RANGE

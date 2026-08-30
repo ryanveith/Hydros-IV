@@ -12,6 +12,7 @@ from terrain.square import get_adjacent_tiles
 from buildings.storage_box import Storage_Box
 import utility.constants as CONSTANTS
 import utility.action_variables as ACTIONS
+from utility.shadow_tint import load_tinted_shadow
 
 class GUI():
     def __init__(self, world_logic):
@@ -200,10 +201,18 @@ class GUI():
     def draw_world(self, mode):
         if (mode == "zoom screen"): 
             # If we are zooming the screen zoom all images in use
-            for file_path, (tkinter_image, width, height) in self.photo_image_list.items():
+            for file_path, (tkinter_image, width, height) in list(self.photo_image_list.items()):
                 # Image can be none, and will for rectangles which will not have a viable file path
                 if (tkinter_image != None):
-                    self.photo_image_list[file_path] = (ImageTk.PhotoImage(Image.open(file_path).resize((int(self.zoom / 100 * width), int(self.zoom / 100 * height)))), width, height)
+                    if "::" in file_path:
+                        base_path, color = file_path.rsplit("::", 1)
+                        self.photo_image_list[file_path] = (
+                            load_tinted_shadow(base_path, color, width, height, self.zoom),
+                            width,
+                            height,
+                        )
+                    else:
+                        self.photo_image_list[file_path] = (ImageTk.PhotoImage(Image.open(file_path).resize((int(self.zoom / 100 * width), int(self.zoom / 100 * height)))), width, height)
 
         # Everything we are drawing should be a child of Drawable_Object
         # Therefore just call draw_self on them
@@ -228,6 +237,19 @@ class GUI():
         self.canvas.tag_raise("menu")
         
             
+    def _create_selection_halo(self, selected_unit: unit.Unit) -> drawable_object.Drawable_Object:
+        halo = drawable_object.Drawable_Object(
+            selected_unit.tile_x,
+            selected_unit.tile_y,
+            None,
+            "halo",
+            CONSTANTS.TILE_WIDTH,
+            int(CONSTANTS.TILE_HEIGHT / 2),
+            "shadow.png",
+        )
+        halo.my_images[0].tint_color = selected_unit.team.color if selected_unit.team else None
+        return halo
+
     def pan_screen(self, direction, amount):
         if (direction == "Up"):
             self.screen_y += amount
@@ -396,15 +418,15 @@ class GUI():
                     clicked_unit = clicked_tile.occupied
                     # Multiselect means add it to selected list, not means replace selected with it
                     if (self.multiselect):
-                        if (clicked_unit != None and isinstance(clicked_unit, unit.Unit)):
+                        if (clicked_unit != None and isinstance(clicked_unit, unit.Unit) and self.world_host.player_team.contains(clicked_unit)):
                             # Append the selected unit to list
-                            self.selected.append( (clicked_unit, drawable_object.Drawable_Object(clicked_unit.tile_x, clicked_unit.tile_y, None, "halo", CONSTANTS.TILE_WIDTH, int(CONSTANTS.TILE_HEIGHT / 2), "shadow.png")) )
+                            self.selected.append( (clicked_unit, self._create_selection_halo(clicked_unit)) )
                     else:
                         # Clear images from canvas (since this does not happen during garbage collection)
                         for selected_unit, halo in self.selected:
                             halo.clear_image(self.canvas)
-                        if (clicked_unit != None and isinstance(clicked_unit, unit.Unit)):
-                            self.selected = [ (clicked_unit, drawable_object.Drawable_Object(clicked_unit.tile_x, clicked_unit.tile_y, None, "halo", CONSTANTS.TILE_WIDTH, int(CONSTANTS.TILE_HEIGHT / 2), "shadow.png")) ]
+                        if (clicked_unit != None and isinstance(clicked_unit, unit.Unit) and self.world_host.player_team.contains(clicked_unit)):
+                            self.selected = [ (clicked_unit, self._create_selection_halo(clicked_unit)) ]
                         else:
                             self.selected = []
             #Move all selected units to destination
@@ -431,9 +453,13 @@ class GUI():
                         if (target not in selected_units and len(self.selected) > 0):
                             if (self.multiselect == True):
                                 for attacking_unit, halo in self.selected:
+                                    if target.team is attacking_unit.team:
+                                        continue
                                     attacking_unit.queue_command(ACTIONS.ATTACK, target.key)
                             else:
                                 for attacking_unit, halo in self.selected:
+                                    if target.team is attacking_unit.team:
+                                        continue
                                     attacking_unit.set_command(ACTIONS.ATTACK, target.key)
 
             else:

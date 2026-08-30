@@ -7,6 +7,7 @@ import utility.action_variables as ACTIONS
 from items.item import Item
 from buildings.building import Building
 from buildings.storage_box import Storage_Box
+from teams.team import Team
 
 import items.item_constructors
 
@@ -24,6 +25,9 @@ class Logic():
         self.increment_id = 0
         self.keys_to_delete = []
         self.pending_projectiles: list[tuple] = []
+
+        self.player_team = Team("Player", "blue")
+        self.enemy_team = Team("Enemy", "red")
 
         self.place_ground_item(self.state["1x1"], items.item_constructors.create_item_pebble())
         self.place_ground_item(self.state["1x2"], items.item_constructors.create_item_stick())
@@ -48,8 +52,8 @@ class Logic():
         print(player["name"], " joined")
         self.playerlist.append(player)
         
-        self.create_unit(self.state["0x0"], player["name"]+" Hero")
-        self.create_unit(self.state["0x1"], "Debug")
+        self.create_unit(self.state["0x0"], player["name"]+" Hero", team=self.player_team)
+        self.create_unit(self.state["0x1"], "Debug", team=self.player_team)
     
     def broadcast_world(self):
         # Send all players a message that the world has updated
@@ -163,7 +167,7 @@ class Logic():
     def create_projectile(self, source, target, damage: int = 10):
         if (type(source) == unit.Unit):
             spawn_x = (source.tile_x + (source.tile_y % 2) / 2) * CONSTANTS.TILE_WIDTH + source.x_offset
-            spawn_y = source.tile_y * CONSTANTS.TILE_HEIGHT + source.y_offset - source.my_images[0].height / 2
+            spawn_y = source.tile_y * CONSTANTS.TILE_HEIGHT + source.y_offset - source.my_images[1].height / 2
         else:
             spawn_x = (source.tile_x + (source.tile_y % 2) / 2) * CONSTANTS.TILE_WIDTH
             spawn_y = source.tile_y * CONSTANTS.TILE_HEIGHT
@@ -178,7 +182,7 @@ class Logic():
         self.state[str(self.increment_id)] = projectile
         self.increment_id += 1
 
-    def create_unit(self, tile: square.Square, name: str):
+    def create_unit(self, tile: square.Square, name: str, team=None):
         if (tile.occupied != None):
             #Cannot create unit on top of anohter
             return None
@@ -187,6 +191,9 @@ class Logic():
         #spawn_location.occupied = unit
         self.state[name] = hero_unit
         tile.occupied = hero_unit
+        if team is not None:
+            team.add_unit(hero_unit)
+        return hero_unit
 
     def create_building(self, tile: square.Square, building: Building):
         if (tile.occupied != None):
