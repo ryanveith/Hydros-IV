@@ -19,6 +19,7 @@ class Multi_Menu(menu_screen.Menu_Screen):
         super().__init__(x, y, 1, 1, "dark slate gray")
         self.storage = storage
         self.equipment = equipment
+        self.linked_storage: Storage_Menu | None = None
         self.selected_item: Item | None = None
         self.selected_menu: Storage_Menu | Equipment_Menu | None = None
         self.handle_click = Multi_Menu.handle_click
@@ -38,23 +39,30 @@ class Multi_Menu(menu_screen.Menu_Screen):
         self.selected_menu = None
         return item
 
+    def _child_menus(self):
+        menus = [self.equipment, self.storage]
+        if self.linked_storage is not None:
+            menus.append(self.linked_storage)
+        return menus
+
     def _layout_children(self):
         gap = 20
         eq_w = self.equipment.my_images[0].width
         st_w = self.storage.my_images[0].width
+        eq_h = self.equipment.my_images[0].height
+        st_h = self.storage.my_images[0].height
         self.equipment.tile_x = int(self.tile_x - (eq_w / 2 + gap / 2))
         self.storage.tile_x = int(self.tile_x + (st_w / 2 + gap / 2))
         self.equipment.tile_y = self.tile_y
         self.storage.tile_y = self.tile_y
-
-    def _other_menu(self, menu):
-        if menu is self.equipment:
-            return self.storage
-        return self.equipment
+        if self.linked_storage is not None:
+            box_h = self.linked_storage.my_images[0].height
+            self.linked_storage.tile_x = self.tile_x
+            self.linked_storage.tile_y = int(self.tile_y + max(eq_h, st_h) / 2 + gap + box_h / 2)
 
     def _clear_selection(self):
-        self.equipment._select(None)
-        self.storage._select(None)
+        for menu in self._child_menus():
+            menu._select(None)
         self.selected_item = None
         self.selected_menu = None
 
@@ -67,22 +75,59 @@ class Multi_Menu(menu_screen.Menu_Screen):
             mode: str,
             tkinter_image_list: dict[str, ImageTk.PhotoImage]):
         self._layout_children()
-        self.equipment.draw_self(zoom, screen_x, screen_y, canvas, mode, tkinter_image_list)
-        self.storage.draw_self(zoom, screen_x, screen_y, canvas, mode, tkinter_image_list)
+        for menu in self._child_menus():
+            menu.draw_self(zoom, screen_x, screen_y, canvas, mode, tkinter_image_list)
 
     def clear_image(self, canvas):
-        self.equipment.clear_image(canvas)
-        self.storage.clear_image(canvas)
-        for image in self.equipment.my_images:
-            image.tkinter_id = None
-        for image in self.storage.my_images:
-            image.tkinter_id = None
+        for menu in self._child_menus():
+            menu.clear_image(canvas)
+            for image in menu.my_images:
+                image.tkinter_id = None
         super().clear_image(canvas)
 
     def handle_click(self, click_x: int, click_y: int, click_type="interact") -> bool:
         self._layout_children()
 
-        for dest in (self.equipment, self.storage):
+        # Shift-click transfers when a linked box storage is open
+        if click_type == "shift" and self.linked_storage is not None:
+            # Unit equipment/storage → linked box
+            for dest in (self.equipment, self.storage):
+                if not dest._click_in_panel(click_x, click_y):
+                    continue
+                index = dest._slot_index(click_x, click_y)
+                if index is None or dest.items[index] is None:
+                    return True
+                # Normalize to top-left slot for multi-slot storage items
+                dest._select(index)
+                item = dest.remove_item()
+                if item is None:
+                    self.selected_item = None
+                    self.selected_menu = None
+                    return True
+                if not self.linked_storage.add_item(item):
+                    dest.add_item(item)
+                self.selected_item = None
+                self.selected_menu = None
+                return True
+
+            # Linked box → equipment (matching free slot) then unit storage
+            if self.linked_storage._click_in_panel(click_x, click_y):
+                index = self.linked_storage._slot_index(click_x, click_y)
+                if index is None or self.linked_storage.items[index] is None:
+                    return True
+                self.linked_storage._select(index)
+                item = self.linked_storage.remove_item()
+                if item is None:
+                    self.selected_item = None
+                    self.selected_menu = None
+                    return True
+                if not self.equipment.add_item(item) and not self.storage.add_item(item):
+                    self.linked_storage.add_item(item)
+                self.selected_item = None
+                self.selected_menu = None
+                return True
+
+        for dest in self._child_menus():
             incoming = None
             if self.selected_menu is not None and self.selected_menu is not dest:
                 incoming = self.selected_item
@@ -96,8 +141,6 @@ class Multi_Menu(menu_screen.Menu_Screen):
 
             if not consumed:
                 continue
-
-            other = self._other_menu(dest)
 
             if (
                 empty_index is not None
@@ -120,7 +163,9 @@ class Multi_Menu(menu_screen.Menu_Screen):
                 return True
 
             if dest.selected_item is not None:
-                other._select(None)
+                for menu in self._child_menus():
+                    if menu is not dest:
+                        menu._select(None)
                 self.selected_item = dest.selected_item
                 self.selected_menu = dest
             elif self.selected_menu is dest:

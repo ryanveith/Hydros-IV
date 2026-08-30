@@ -5,6 +5,8 @@ import units.unit as unit
 from projectiles.projectile import Projectile
 import utility.action_variables as ACTIONS
 from items.item import Item
+from buildings.building import Building
+from buildings.storage_box import Storage_Box
 
 import items.item_constructors
 
@@ -27,6 +29,7 @@ class Logic():
         self.place_ground_item(self.state["1x1"], items.item_constructors.create_item_pebble())
         self.place_ground_item(self.state["1x2"], items.item_constructors.create_item_stick())
         self.place_ground_item(self.state["2x1"], items.item_constructors.create_item_gold_ore())
+        self.create_building(self.state["1x0"], Storage_Box(1, 0, "storage_box", "storage_box"))
 
     def set_root(self, root):
         self.tkinter_mainloop_root = root
@@ -154,3 +157,10 @@ class Logic():
         #spawn_location.occupied = unit
         self.state[name] = hero_unit
         tile.occupied = hero_unit
+
+    def create_building(self, tile: square.Square, building: Building):
+        if (tile.occupied != None):
+            return None
+        self.state[building.key] = building
+        tile.occupied = building
+        return building
