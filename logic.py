@@ -10,8 +10,6 @@ from buildings.storage_box import Storage_Box
 
 import items.item_constructors
 
-import json
-
 
 class Logic():
     def __init__(self):
@@ -25,10 +23,12 @@ class Logic():
 
         self.increment_id = 0
         self.keys_to_delete = []
+        self.pending_projectiles: list[tuple] = []
 
         self.place_ground_item(self.state["1x1"], items.item_constructors.create_item_pebble())
         self.place_ground_item(self.state["1x2"], items.item_constructors.create_item_stick())
         self.place_ground_item(self.state["2x1"], items.item_constructors.create_item_gold_ore())
+        self.place_ground_item(self.state["2x2"], items.item_constructors.create_item_bow())
         self.create_building(self.state["1x0"], Storage_Box(1, 0, "storage_box", "storage_box"))
 
     def set_root(self, root):
@@ -113,6 +113,18 @@ class Logic():
 
                         # This "action" was completed so remove it from list
                         object.implement_commands_list.pop(0)
+
+                elif (command == ACTIONS.ATTACK):
+                    if (type(object) == unit.Unit):
+                        target = self.state.get(context)
+                        if (target != None and type(target) == unit.Unit and target.health > 0):
+                            if (object.has_bow_equipped()):
+                                self.pending_projectiles.append((object, target, CONSTANTS.BOW_DAMAGE))
+                            else:
+                                target.health -= CONSTANTS.MELEE_DAMAGE
+                                if (target.health <= 0):
+                                    self._kill_unit(target)
+                    object.implement_commands_list.pop(0)
                 
                 elif (command == ACTIONS.TIMEOUT):
                     self.keys_to_delete.append(key)
@@ -124,9 +136,12 @@ class Logic():
                             # TODO - experience, which requires a way of tracking participation
                             
                             if (projectile.target.health <= 0):
-                                self.keys_to_delete.append(projectile.target.key)
-                                self.state[str(projectile.target.tile_x)+"x"+str(projectile.target.tile_y)].occupied = None
+                                self._kill_unit(projectile.target)
                     self.keys_to_delete.append(key)
+
+        for source, target, damage in self.pending_projectiles:
+            self.create_projectile(source, target, damage)
+        self.pending_projectiles.clear()
 
         # Send updated state
         self.broadcast_world()
@@ -139,13 +154,28 @@ class Logic():
     def get_world(self):
         return self.state
     
-    def create_projectile(self, tile, target):
-        self.state[str(self.increment_id)] = Projectile(
-            tile_x = (tile.tile_x - (tile.tile_y % 2)/2) * CONSTANTS.TILE_WIDTH, 
-            tile_y = tile.tile_y * CONSTANTS.TILE_HEIGHT, 
+    def _kill_unit(self, target: unit.Unit):
+        self.keys_to_delete.append(target.key)
+        tile = self.state.get(str(target.tile_x) + "x" + str(target.tile_y))
+        if (tile != None):
+            tile.occupied = None
+
+    def create_projectile(self, source, target, damage: int = 10):
+        if (type(source) == unit.Unit):
+            spawn_x = (source.tile_x + (source.tile_y % 2) / 2) * CONSTANTS.TILE_WIDTH + source.x_offset
+            spawn_y = source.tile_y * CONSTANTS.TILE_HEIGHT + source.y_offset - source.my_images[0].height / 2
+        else:
+            spawn_x = (source.tile_x + (source.tile_y % 2) / 2) * CONSTANTS.TILE_WIDTH
+            spawn_y = source.tile_y * CONSTANTS.TILE_HEIGHT
+
+        projectile = Projectile(
+            tile_x = spawn_x,
+            tile_y = spawn_y,
             key = str(self.increment_id), 
             tag = str(self.increment_id), 
             target=target)
+        projectile.damage = damage
+        self.state[str(self.increment_id)] = projectile
         self.increment_id += 1
 
     def create_unit(self, tile: square.Square, name: str):

@@ -11,7 +11,8 @@ class Item(drawable_object.Drawable_Object):
             item_image_height: int = CONSTANTS.TILE_HEIGHT,
             image_file: str = "items/pebble.png",
             name: str = "",
-            equipment_type: str | None = None):
+            equipment_type: str | None = None,
+            weapon_type: str | None = None):
         #tile_x: int, tile_y: int, key: str, tag: str, width: int, height: int, image_file: str, drawable_type = 0):
         super().__init__(0, 0, name, "item", item_image_width, item_image_height, image_file)
         self.item_width = item_image_width
@@ -20,6 +21,7 @@ class Item(drawable_object.Drawable_Object):
         self.item_slot_height = item_slot_height
         # What type of equipment is this (unwearable is None)
         self.equipment_type = equipment_type
+        self.weapon_type = weapon_type
 
     def get_display_image(self, x_offset: int, y_offset: int) -> drawable_object.Drawable_Image:
         """Build a new Drawable_Image for inventory display at the given slot offsets."""

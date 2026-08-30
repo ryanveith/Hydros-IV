@@ -19,3 +19,4 @@ class Keybinds():
         self.multiselect_toggle = "Shift_L"
 
         self.move_unit = "m"
+        self.attack_unit = "a"

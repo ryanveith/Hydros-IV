@@ -421,6 +421,20 @@ class GUI():
                         else:
                             for moveable_unit, halo in self.selected:
                                 moveable_unit.set_command(ACTIONS.MOVE, str(x)+"x"+str(y))
+            elif(event.keysym == self.keybindings.attack_unit or event.keysym.lower() == self.keybindings.attack_unit):
+                x, y = self.get_grid_square(event.x, event.y)
+                clicked_tile: square.Square = self.world.get(str(x)+"x"+str(y))
+                if (clicked_tile != None):
+                    target = clicked_tile.occupied
+                    if (target != None and isinstance(target, unit.Unit)):
+                        selected_units = [selected_unit for selected_unit, halo in self.selected]
+                        if (target not in selected_units and len(self.selected) > 0):
+                            if (self.multiselect == True):
+                                for attacking_unit, halo in self.selected:
+                                    attacking_unit.queue_command(ACTIONS.ATTACK, target.key)
+                            else:
+                                for attacking_unit, halo in self.selected:
+                                    attacking_unit.set_command(ACTIONS.ATTACK, target.key)
 
             else:
                 # Debug message for what key was hit

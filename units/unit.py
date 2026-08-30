@@ -52,6 +52,12 @@ class Unit(drawable_object.Drawable_Object):
                 if (command == ACTIONS.MOVE):
                     self.player_commands_list.pop(0)
                     self.move_unit(logic.get_world(), context)
+                elif (command == ACTIONS.ATTACK):
+                    self.player_commands_list.pop(0)
+                    world = logic.get_world()
+                    target = world.get(context)
+                    if (self.can_attack(target, world)):
+                        self.implement_commands_list.append((ACTIONS.ATTACK, target.key))
             # TODO - decide on ticks waiting before moving to next action in queue
             # For inteupted actions it makes sense to wait a bit
             # Waiting at least one tick also simplifies this section since we don't have to keep looking for an action until we find a valid one 
@@ -69,6 +75,35 @@ class Unit(drawable_object.Drawable_Object):
     def set_command(self, command: int, context: str):
         self.player_commands_list = [ (command, context) ]
         self.implement_commands_list.clear()
+
+    def has_bow_equipped(self) -> bool:
+        equipment = self.inventory.equipment
+        for i, slot in enumerate(equipment.slots):
+            if slot["name"] in ("hand_left", "hand_right"):
+                item = equipment.items[i]
+                if item is not None and item.weapon_type == "bow":
+                    return True
+        return False
+
+    def tile_distance_to(self, target: drawable_object.Drawable_Object) -> int:
+        return Unit.heuristic(self, target)
+
+    def is_adjacent_to(self, target: drawable_object.Drawable_Object, world: dict) -> bool:
+        adjacent_tiles = get_adjacent_tiles(world, self.tile_x, self.tile_y)
+        target_tile_key = str(target.tile_x) + "x" + str(target.tile_y)
+        for tile in adjacent_tiles:
+            if str(tile.tile_x) + "x" + str(tile.tile_y) == target_tile_key:
+                return True
+        return False
+
+    def can_attack(self, target, world: dict) -> bool:
+        if target is None or not isinstance(target, Unit):
+            return False
+        if target.key == self.key or target.health <= 0:
+            return False
+        if self.has_bow_equipped():
+            return self.tile_distance_to(target) <= CONSTANTS.BOW_RANGE
+        return self.is_adjacent_to(target, world)
 
 
     # Add steps requried to move unit to destination to implement_commands_list
