@@ -9,8 +9,9 @@ from terrain.square import get_adjacent_tiles
 import heapq
 
 class Unit(drawable_object.Drawable_Object):
-    def __init__(self, tile_x: int, tile_y: int, key: str, tag: str):
-        super().__init__(tile_x, tile_y, key, tag, 100, 100, "elfling.png")
+    def __init__(self, tile_x: int, tile_y: int, key: str, tag: str,
+                 image_file: str = "elfling.png", width: int = 100, height: int = 100):
+        super().__init__(tile_x, tile_y, key, tag, width, height, image_file)
         self.player_commands_list: list[tuple[int, str]] = []
         self.implement_commands_list: list[tuple[int, str]] = []
         

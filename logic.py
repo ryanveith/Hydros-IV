@@ -10,6 +10,7 @@ from buildings.storage_box import Storage_Box
 from teams.team import Team
 
 import items.item_constructors
+import units.unit_constructors
 
 
 class Logic():
@@ -53,7 +54,7 @@ class Logic():
         self.playerlist.append(player)
         
         self.create_unit(self.state["0x0"], player["name"]+" Hero", team=self.player_team)
-        self.create_unit(self.state["0x1"], "Debug", team=self.player_team)
+        self.create_unit(self.state["0x1"], "Debug", team=self.player_team, hairstyle=2)
     
     def broadcast_world(self):
         # Send all players a message that the world has updated
@@ -119,9 +120,9 @@ class Logic():
                         object.implement_commands_list.pop(0)
 
                 elif (command == ACTIONS.ATTACK):
-                    if (type(object) == unit.Unit):
+                    if (isinstance(object, unit.Unit)):
                         target = self.state.get(context)
-                        if (target != None and type(target) == unit.Unit and target.health > 0):
+                        if (target != None and isinstance(target, unit.Unit) and target.health > 0):
                             if (object.has_bow_equipped()):
                                 self.pending_projectiles.append((object, target, CONSTANTS.BOW_DAMAGE))
                             else:
@@ -135,7 +136,7 @@ class Logic():
                 elif (command == ACTIONS.COLLISION):
                     projectile: Projectile = self.state.get(context)
                     if (projectile != None):
-                        if (type(projectile.target) == unit.Unit and projectile.target.key != None):
+                        if (isinstance(projectile.target, unit.Unit) and projectile.target.key != None):
                             projectile.target.health -= projectile.damage
                             # TODO - experience, which requires a way of tracking participation
                             
@@ -165,7 +166,7 @@ class Logic():
             tile.occupied = None
 
     def create_projectile(self, source, target, damage: int = 10):
-        if (type(source) == unit.Unit):
+        if (isinstance(source, unit.Unit)):
             spawn_x = (source.tile_x + (source.tile_y % 2) / 2) * CONSTANTS.TILE_WIDTH + source.x_offset
             spawn_y = source.tile_y * CONSTANTS.TILE_HEIGHT + source.y_offset - source.my_images[1].height / 2
         else:
@@ -182,11 +183,16 @@ class Logic():
         self.state[str(self.increment_id)] = projectile
         self.increment_id += 1
 
-    def create_unit(self, tile: square.Square, name: str, team=None):
+    def create_unit(self, tile: square.Square, name: str, team=None,
+                    image: str | None = None, gender: str = "male",
+                    variation: int = 1, hairstyle: int = 1):
         if (tile.occupied != None):
             #Cannot create unit on top of anohter
             return None
-        hero_unit = unit.Unit(tile.tile_x, tile.tile_y, name, name)
+        hero_unit = units.unit_constructors.create_humanoid(
+            tile.tile_x, tile.tile_y, name,
+            image=image, gender=gender, variation=variation, hairstyle=hairstyle,
+        )
         #spawn_location = next((spot for spot in self.state if spot.x == 0 and spot.y == 0), None) 
         #spawn_location.occupied = unit
         self.state[name] = hero_unit
