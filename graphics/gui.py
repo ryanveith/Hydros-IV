@@ -8,6 +8,8 @@ from units import unit
 import drawable_object
 import menus.menu_screen as menu_screen
 import terrain.square as square
+from terrain.square import get_adjacent_tiles
+from buildings.storage_box import Storage_Box
 import utility.constants as CONSTANTS
 import utility.action_variables as ACTIONS
 
@@ -88,7 +90,7 @@ class GUI():
                 int(self.canvas_width/2), int(self.canvas_height/2), 
                 400, 400, "blue", 
                 text = "Testing - only interaction is enter key", 
-                handle_click = lambda self, click_x, click_y: 
+                handle_click = lambda self, click_x, click_y, click_type="interact": 
                 True if (
                     click_x > self.tile_x - self.my_images[0].width and 
                     click_x < self.tile_x + self.my_images[0].width and 
@@ -266,8 +268,10 @@ class GUI():
     def handle_menu_click(self, event):
         # Iterate though all menu screens on click to deterimne if they are clicked and if so hanlde it
         # Returns True if any menu consumed the click
+        click_type = "shift" if (event.state & 0x0001) else "interact"
         for screen in self.menu:
-            did_something = screen.handle_click(self = screen, click_x = event.x, click_y = event.y)
+            did_something = screen.handle_click(
+                self = screen, click_x = event.x, click_y = event.y, click_type = click_type)
             if did_something:
                 print(screen)
                 return True
@@ -276,9 +280,15 @@ class GUI():
     def close_inventory(self):
         if self.open_inventory is None:
             return
+        # clear_image also clears linked_storage canvas ids while it is still attached
         self.open_inventory.clear_image(self.canvas)
         for image in self.open_inventory.my_images:
             image.tkinter_id = None
+        if getattr(self.open_inventory, "linked_storage", None) is not None:
+            linked = self.open_inventory.linked_storage
+            for image in linked.my_images:
+                image.tkinter_id = None
+            self.open_inventory.linked_storage = None
         if self.open_inventory in self.menu:
             self.menu.remove(self.open_inventory)
         self.open_inventory = None
@@ -286,8 +296,18 @@ class GUI():
     def open_unit_inventory(self, selected_unit: unit.Unit):
         self.close_inventory()
         inventory = selected_unit.inventory
+        inventory.linked_storage = None
+        for tile in get_adjacent_tiles(self.world, selected_unit.tile_x, selected_unit.tile_y):
+            if isinstance(tile.occupied, Storage_Box):
+                inventory.linked_storage = tile.occupied.storage
+                inventory.linked_storage._select(None)
+                break
         inventory.tile_x = int(self.canvas_width / 2)
-        inventory.tile_y = int(self.canvas_height / 2)
+        # Shift unit inventory up a bit when a box panel will sit below it
+        if inventory.linked_storage is not None:
+            inventory.tile_y = int(self.canvas_height / 2 - 80)
+        else:
+            inventory.tile_y = int(self.canvas_height / 2)
         self.menu.append(inventory)
         self.open_inventory = inventory
 

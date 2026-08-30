@@ -7,7 +7,7 @@ class Menu_Screen(drawable_object.Drawable_Object):
     def __init__(
             self, x:int, y: int, width: int, height: int, 
             color: str, text: str = "", image_file: str = "", 
-            handle_click = lambda self, click_x, click_y: False):
+            handle_click = lambda self, click_x, click_y, click_type="interact": False):
         
         super().__init__(x, y, "", "menu", width, height, color, drawable_type = 1)
         self.handle_click = handle_click
